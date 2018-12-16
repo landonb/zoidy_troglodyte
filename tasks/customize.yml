@@ -1,0 +1,38 @@
+---
+
+# Inspired by wonderful blog post of locking down fresh box.
+#
+#  https://ryaneschinger.com/blog/securing-a-server-with-ansible/
+
+- name: Install opsec packages
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: install-packages-opsec
+  tags: install-packages-opsec
+
+- name: Configure unattended installs
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: setup-apt-periodic
+  tags: setup-apt-periodic
+
+- name: Configure firewall
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: setup-ufw-firewall
+  tags: setup-ufw-firewall
+
+- name: Configure logwatch
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: setup-log-watch
+  tags: setup-log-watch
+# FIXME/2018-12-16: Figure out how to wire emails, then setup logwatch.
+  when: False
+
+- name: Disable Password Auth & Root SSH Login
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: disable-password-auth
+  tags: disable-password-auth
+

@@ -1,0 +1,20 @@
+---
+
+- name: Setup ufw
+  become: true
+  ufw: state=enabled policy=deny
+  tags: setup-ufw-firewall
+
+- name: Allow ssh traffic
+  become: true
+  ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
+  tags: setup-ufw-firewall
+
+- name: Allow mosh traffic
+  become: true
+  ufw:
+    rule: allow
+    proto: udp
+    port: "{{ zoidy_troglodyte_mosh_port_beg }}:{{ zoidy_troglodyte_mosh_port_end }}"
+  tags: setup-ufw-firewall
+

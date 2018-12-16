@@ -1,0 +1,14 @@
+---
+# Main task: Load package installers, or not, based on tags.
+
+- name: Lockdown
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: customize
+  tags:
+    - install-packages-opsec
+    - setup-apt-periodic
+    - setup-ufw-firewall
+    - setup-log-watch
+    - disable-password-auth
+
