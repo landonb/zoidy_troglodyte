@@ -8,24 +8,36 @@
   include_role:
     name: zoidy_troglodyte
     tasks_from: install-packages-opsec
+    apply:
+      tags:
+        - install-packages-opsec
   tags: install-packages-opsec
 
 - name: Configure unattended installs
   include_role:
     name: zoidy_troglodyte
     tasks_from: setup-apt-periodic
+    apply:
+      tags:
+        - setup-apt-periodic
   tags: setup-apt-periodic
 
 - name: Configure firewall
   include_role:
     name: zoidy_troglodyte
     tasks_from: setup-ufw-firewall
+    apply:
+      tags:
+        - setup-ufw-firewall
   tags: setup-ufw-firewall
 
 - name: Configure logwatch
   include_role:
     name: zoidy_troglodyte
     tasks_from: setup-log-watch
+    apply:
+      tags:
+        - setup-log-watch
   tags: setup-log-watch
 # FIXME/2018-12-16: Figure out how to wire emails, then setup logwatch.
   when: False
@@ -34,5 +46,8 @@
   include_role:
     name: zoidy_troglodyte
     tasks_from: disable-password-auth
+    apply:
+      tags:
+        - disable-password-auth
   tags: disable-password-auth
 
