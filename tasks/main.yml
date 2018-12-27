@@ -4,7 +4,7 @@
 - name: Lockdown
   include_role:
     name: zoidy_troglodyte
-    tasks_from: customize
+    tasks_from: all
   tags:
     - install-packages-opsec
     - setup-apt-periodic
