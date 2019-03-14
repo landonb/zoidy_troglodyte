@@ -8,6 +8,7 @@
   become: true
   ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
 
+# https://en.wikipedia.org/wiki/Mosh_(software)
 - name: Allow mosh traffic
   become: true
   ufw:
