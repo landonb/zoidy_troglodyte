@@ -4,3 +4,12 @@
   become: yes
   service: name=sshd state=restarted
 
+- name: Persist iptables
+  become: yes
+  # Note: This creates /etc/iptables/rules.v4|v6
+  command: service netfilter-persistent save
+  args:
+    # Note that 'save' is not a valid (Ansible) service module state.
+    #   service: name=netfilter-persistent state=save
+    warn: False
+

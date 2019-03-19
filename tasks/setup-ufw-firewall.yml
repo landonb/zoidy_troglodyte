@@ -55,3 +55,12 @@
   loop: "{{ zoidy_troglodyte_ssh_restrict_macs }}"
   when: zoidy_troglodyte_ssh_restrict_macs | length > 0
 
+# ***
+
+- name: Install packages to persist/save iptables firewall settings across boots
+  become: true
+  apt: name={{ item }}
+  loop:
+    - netfilter-persistent
+    - iptables-persistent
+
