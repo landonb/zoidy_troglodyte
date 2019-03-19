@@ -24,3 +24,14 @@
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
 
+# ***
+
+- name: Restrict SSH to specific user(s), perhaps
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^AllowUsers"
+              line="AllowUsers {{ zoidy_troglodyte_ssh_restrict_user }}"
+              state=present
+  notify: Restart sshd
+  when: zoidy_troglodyte_ssh_restrict_user != ''
+
