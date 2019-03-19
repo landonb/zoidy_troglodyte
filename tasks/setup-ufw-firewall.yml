@@ -16,6 +16,7 @@
 - name: Allow ssh traffic
   become: true
   ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
+  when: zoidy_troglodyte_ssh_restrict_macs | length == 0
 
 # https://en.wikipedia.org/wiki/Mosh_(software)
 - name: Allow mosh traffic
@@ -37,4 +38,20 @@
       sort -r -n | \
       xargs -I '{}' /sbin/iptables --delete INPUT {}
   become: yes
+
+# E.g.,
+#   /sbin/iptables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
+- name: Allow ssh traffic from *just my devices*
+  shell: >
+    /sbin/iptables \
+      -A INPUT \
+      -p tcp \
+      --destination-port {{ zoidy_troglodyte_ssh_port }} \
+      -m mac \
+      --mac-source {{ item }} \
+      -j ACCEPT
+  become: yes
+  notify: Persist iptables
+  loop: "{{ zoidy_troglodyte_ssh_restrict_macs }}"
+  when: zoidy_troglodyte_ssh_restrict_macs | length > 0
 

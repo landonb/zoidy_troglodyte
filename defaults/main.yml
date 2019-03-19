@@ -1,7 +1,10 @@
 ---
+
 zoidy_troglodyte_logwatch_email: user@domain
 
 zoidy_troglodyte_ssh_port: 22
 zoidy_troglodyte_mosh_port_beg: 60000
 zoidy_troglodyte_mosh_port_end: 60010
+
+zoidy_troglodyte_ssh_restrict_macs: []
 
