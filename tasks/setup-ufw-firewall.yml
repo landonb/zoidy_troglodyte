@@ -24,4 +24,6 @@
     rule: allow
     proto: udp
     port: "{{ zoidy_troglodyte_mosh_port_beg }}:{{ zoidy_troglodyte_mosh_port_end }}"
+  # 2019-03-19 00:01: Pretty sure no need to mosh. Not tonight, at least.
+  when: False
 
