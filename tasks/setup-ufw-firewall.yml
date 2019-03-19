@@ -27,3 +27,14 @@
   # 2019-03-19 00:01: Pretty sure no need to mosh. Not tonight, at least.
   when: False
 
+# ***
+
+- name: Clean existing INPUT rules
+  shell: >
+    /sbin/iptables -L INPUT --line-numbers | \
+      grep ACCEPT | \
+      awk '{print $1}' | \
+      sort -r -n | \
+      xargs -I '{}' /sbin/iptables --delete INPUT {}
+  become: yes
+
