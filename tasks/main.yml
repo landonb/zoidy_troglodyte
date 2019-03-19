@@ -10,5 +10,5 @@
     - setup-apt-periodic
     - setup-ufw-firewall
     - setup-log-watch
-    - disable-password-auth
+    - ssh-harden-config
 

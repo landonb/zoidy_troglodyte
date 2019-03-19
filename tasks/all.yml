@@ -45,9 +45,9 @@
 - name: Disable Password Auth & Root SSH Login
   include_role:
     name: zoidy_troglodyte
-    tasks_from: disable-password-auth
+    tasks_from: ssh-harden-config
     apply:
       tags:
-        - disable-password-auth
-  tags: disable-password-auth
+        - ssh-harden-config
+  tags: ssh-harden-config
 
