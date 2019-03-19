@@ -5,8 +5,8 @@
 #              regexp="^Port\s"
 #              line="Port {{ zoidy_troglodyte_ssh_port }}"
 #              state=present
-#  notify: Restart ssh
-  
+#  notify: Restart sshd
+
 - name: Disallow password authentication
   become: true
   lineinfile: dest=/etc/ssh/sshd_config
@@ -20,5 +20,5 @@
               regexp="^PermitRootLogin"
               line="PermitRootLogin no"
               state=present
-  notify: Restart ssh
+  notify: Restart sshd
 
