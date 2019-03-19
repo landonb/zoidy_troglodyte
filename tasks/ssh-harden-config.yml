@@ -24,6 +24,30 @@
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
 
+- name: Disallow X11 traffic forwarding
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^X11Forwarding"
+              line="X11Forwarding no"
+              state=present
+  notify: Restart sshd
+
+- name: Enable DNS hostname checking (verify caller IP)
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^UseDNS"
+              line="UseDNS yes"
+              state=present
+  notify: Restart sshd
+
+- name: Halve the number of connection attempts (to 3 from 6)
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^MaxAuthTries"
+              line="MaxAuthTries 3"
+              state=present
+  notify: Restart sshd
+
 # ***
 
 - name: Restrict SSH to specific user(s), perhaps
