@@ -1,12 +1,5 @@
 ---
 
-#- name: Change ssh port
-#  lineinfile: dest=/etc/ssh/sshd_config
-#              regexp="^Port\s"
-#              line="Port {{ zoidy_troglodyte_ssh_port }}"
-#              state=present
-#  notify: Restart sshd
-
 - name: Disallow password authentication
   become: true
   lineinfile: dest=/etc/ssh/sshd_config
@@ -21,4 +14,13 @@
               line="PermitRootLogin no"
               state=present
   notify: Restart sshd
+
+- name: Change SSH server port number
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^Port\s"
+              line="Port {{ zoidy_troglodyte_ssh_port }}"
+              state=present
+  notify: Restart sshd
+  when: zoidy_troglodyte_ssh_port != 22
 
