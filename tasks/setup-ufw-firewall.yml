@@ -64,3 +64,10 @@
     - netfilter-persistent
     - iptables-persistent
 
+- name: Ensure that netfilter-persistent will be enabled at boot
+  become: true
+  systemd:
+    name: netfilter-persistent
+    state: started
+    enabled: yes
+
