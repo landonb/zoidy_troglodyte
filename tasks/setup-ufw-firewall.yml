@@ -71,3 +71,58 @@
     state: started
     enabled: yes
 
+# The netfilter-persistent service sometimes fails on boot.
+#
+# - It needs to wait for UFW to start, it seems.
+#
+# - (lb): If look in the directory:
+#
+#     /usr/share/netfilter-persistent/plugins.d/
+#
+#   and edit
+#
+#     15-ip4tables (or /25-ip6tables)
+#
+#   and make the restore task verbose:
+#
+#     /sbin/iptables-restore --verbose
+#
+#     (or /sbin/ip6tables-restore --verbose)
+#
+# you'll see that when netfilter-persistent runs, it deletes a number of
+# `ufw-*` (or `ufw6-*`) chains. So I assume the error that occurs on boot
+# is that UFW is not always started before netfilter-persistent, and those
+# rules are not always present. However, I am not 💯, because `*-restore`
+# (even with --verbose) does not indicate an error. Rather, you'll see
+# the error in /var/log/syslog, e.g.:
+#     [578] 9345:22:Mar 25 11:49:59 host netfilter-persistent[850]:
+#       Deleting chain `ufw6-track-output'
+#     [579] 9348:22:Mar 25 11:49:59 host netfilter-persistent[850]:
+#       run-parts: /usr/share/netfilter-persistent/plugins.d/25-ip6tables exited with return code 1
+#
+# - See also: "netfilter-persistent fails randomly during boot; restarting later works"
+#
+#   https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=867560
+#
+#   Wherein the issue was closed because the reported stopped replying,
+#   and because the investigator was able to work around the issue if
+#   they "preload the modules that iptables needs".
+#
+- name: "Ensure that netfilter-persistent starts after UFW, via Wants="
+  become: true
+  # DEFAULT:
+  # Wants=systemd-modules-load.service local-fs.target
+  lineinfile: dest=/lib/systemd/system/netfilter-persistent.service
+              regexp="^Wants="
+              line="Wants=systemd-modules-load.service local-fs.target ufw.service"
+              state=present
+
+- name: "Ensure that netfilter-persistent starts after UFW, via After="
+  become: true
+  # DEFAULT:
+  # After=systemd-modules-load.service local-fs.target
+  lineinfile: dest=/lib/systemd/system/netfilter-persistent.service
+              regexp="^After="
+              line="After=systemd-modules-load.service local-fs.target ufw.service"
+              state=present
+
