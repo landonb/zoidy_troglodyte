@@ -15,6 +15,14 @@
               state=present
   notify: Restart sshd
 
+- name: Allow only this user to SSH-connect
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^AllowUsers"
+              line="AllowUsers {{ ansible_env.LOGNAME }}"
+              state=present
+  notify: Restart sshd
+
 - name: Change SSH server port number
   become: true
   lineinfile: dest=/etc/ssh/sshd_config
