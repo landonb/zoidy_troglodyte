@@ -30,3 +30,14 @@
     state: absent
   when: zoidy_troglodyte_pam_sshd_known_ips | length == 0
 
+# ***
+
+# Message-of-the-Day customization.
+
+- name: On SSH logon, only tell user if new mail (i.e., not empty mailbox)
+  become: true
+  lineinfile:
+    path: /etc/pam.d/sshd
+    line: 'session    optional     pam_mail.so quiet noenv # [1]'
+    regexp: '^session    optional     pam_mail.so standard noenv # \[1\]$'
+
