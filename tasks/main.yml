@@ -7,6 +7,7 @@
     tasks_from: all
   tags:
     - install-packages-opsec
+    - pam-sshd-overkill
     - setup-apt-periodic
     - setup-ufw-firewall
     - setup-log-watch

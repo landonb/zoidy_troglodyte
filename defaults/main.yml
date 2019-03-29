@@ -9,3 +9,5 @@ zoidy_troglodyte_mosh_port_end: 60010
 zoidy_troglodyte_ssh_restrict_user: ''
 zoidy_troglodyte_ssh_restrict_macs: []
 
+zoidy_troglodyte_pam_sshd_known_ips: []
+

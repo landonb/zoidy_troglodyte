@@ -1,0 +1,190 @@
+#!/bin/bash
+# vim:tw=0:ts=2:sw=2:et:norl:ft=bash
+
+# YOU: Setup postfix and create /home/user/.forward if you want
+#      to have sent emails forwarded to, say, Gmail. See: 
+#         zoidy_home-fries/tasks/email-gmail-postfix.yml
+SEND_EMAIL_TO="{{ ansible_env.LOGNAME }}@$(hostname)"
+SEND_EMAIL_FROM="$(basename $0)@$(hostname)"
+
+KNOWN_IPS=()
+# We do not need to include the local IP, which you'd only see if you run
+#   this script manually from a local ssh session, e.g., open mate-terminal,
+#   run `ssh host`, and then execute this script directly.
+# So that `ssh host` works with alerting, add its LAN alias. E.g.,
+#   KNOWN_IPS+=("host.lan")
+{% for known_ip in zoidy_troglodyte_pam_sshd_known_ips %}
+KNOWN_IPS+=("{{ known_ip }}")
+{% endfor %}
+
+TRACE=${TRACE:-false}
+# TRACE=true
+
+# ***
+
+element_in () {
+  local entry
+  local match="$1"
+  shift
+  for entry; do [[ "${entry}" == "${match}" ]] && return 0; done
+  return 1
+}
+
+# ***
+
+set_who_they_are () {
+  # The environs are sparse coming through PAM, e.g.,
+  #   LANG=en_US.UTF-8
+  #   PAM_TYPE=open_session
+  #   XDG_SESSION_ID=886
+  #   PAM_RHOST=hostname.lan
+  #   PAM_USER=user
+  #   PAM_TTY=ssh
+  #   PWD=/
+  #   SSH_AUTH_INFO_0=publickey ssh-ed25519 XXXXXXXXX....
+  #   SHLVL=1
+  #   PAM_SERVICE=sshd
+  #   DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+  #   XDG_RUNTIME_DIR=/run/user/1000
+  #   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+  #   _=/usr/bin/env
+  # Note that PAM_USER is set, but not USER or LOGNAME.
+  # Here we support running locally (mostly for testing).
+  [[ -n $PAM_USER ]] && ENEMY_USER=$PAM_USER || ENEMY_USER=$LOGNAME
+  # PAM_RHOST is, e.g., "host.lan".
+  [[ -n $PAM_RHOST ]] && ENEMY_IP=$PAM_RHOST || ENEMY_IP=${SSH_CONNECTION%% *}
+}
+
+# ***
+
+alert_confused () {
+  mailx \
+    -r "${SEND_EMAIL_FROM}" \
+    -a 'Content-Type: text/html' \
+    -s "ALERT!! Inappropriate logon as “${ENEMY_USER}” on @$(hostname) from Undetectable Originating IP!" \
+    "${SEND_EMAIL_TO}" \
+    <<EOF
+<p>
+<strong>So confused!</strong> Date: $(date)
+</p>
+
+<p>
+Unexpected logon
+as “<em>${ENEMY_USER}</em>”
+on @$(hostname)
+coming through PAM
+<strong>with undetectable originating I.P. address</strong>⁉
+</p>
+
+<p>
+<b>ARE YOU SAFE⁉</b>
+</p>
+
+<pre>
+$(env)
+</pre>
+EOF
+}
+
+# ***
+
+alert_breached () {
+  local subject="ALERT!! Untrusted logon from “${ENEMY_IP}” as “${ENEMY_USER}” on @$(hostname)"
+  message="`env`"
+  mailx \
+    -r "${SEND_EMAIL_FROM}" \
+    -a 'Content-Type: text/html' \
+    -s "${subject}" \
+    "${SEND_EMAIL_TO}" \
+    <<EOF
+<p>
+<strong>Breached!</strong> Date: $(date)
+</p>
+
+<p>
+Inappropriate logon as <em>“${ENEMY_USER}”</em>
+from Untrusted IP — <strong><u>${ENEMY_IP}</u></strong> —
+on @$(hostname)‼
+</p>
+
+<p>
+<b>ARE YOU SAFE?</b>
+</p>
+
+<pre>
+$(env)
+</pre>
+EOF
+}
+
+# ***
+
+alert_loggedoff () {
+  logger -t ssh-wrapper alert-ssh-login: enemy logoffed as “${ENEMY_USER}” from ${ENEMY_IP}
+
+  local subject="ALERT!! Enemy user logged off from “${ENEMY_IP}” as “${ENEMY_USER}” on @$(hostname)"
+  message="`env`"
+  mailx \
+    -r "${SEND_EMAIL_FROM}" \
+    -a 'Content-Type: text/html' \
+    -s "${subject}" \
+    "${SEND_EMAIL_TO}" \
+    <<EOF
+<p>
+<strong>They’re gone!</strong> Date: $(date)
+</p>
+
+<p>
+Inappropriate logon as <em>“${ENEMY_USER}”</em>
+from Untrusted IP — <strong><u>${ENEMY_IP}</u></strong> —
+on @$(hostname)
+has logged off‼
+</p>
+
+<p>
+<b>ARE YOU SAFE?</b>
+</p>
+
+<pre>
+$(env)
+</pre>
+EOF
+}
+
+check_closing () {
+  # (lb): I saw close_session occur 1m07s after open_session, even though
+  # user was still logged on/had not logged off. Whatever. I don't expect
+  # this code to ever run!! #zero-breaches
+  [[ ${PAM_TYPE} != 'close_session' ]] && exit 1
+  if ! element_in "${ENEMY_IP}" "${KNOWN_IPS[@]}"; then
+    alert_loggedoff
+  fi
+  exit 0
+}
+
+# ***
+
+main () {
+  $TRACE && echo "Hi!"
+  set_who_they_are
+  ( check_closing ) && return
+  logger -t ssh-wrapper alert-ssh-login: detected logon as “${ENEMY_USER}” from ${ENEMY_IP}
+  # Because hooked into /etc/pam.d/sshd, would always expect to suss IP.
+  # Well, unless run manually by the user, and not through SSH session.
+  if [[ -z ${ENEMY_IP} ]]; then
+    # 2019-03-29: This happens if you run ./alert-ssh-login as user from raw
+    # (non-SSH) terminal (e.g., mate-terminal).
+    alert_confused
+    return 0
+  fi
+  $TRACE && echo "SSH detected"
+  if ! element_in "${ENEMY_IP}" "${KNOWN_IPS[@]}"; then
+    logger -t ssh-wrapper alert-ssh-login: detected enemy as “${ENEMY_USER}” from ${ENEMY_IP}
+    alert_breached
+  fi
+  $TRACE && echo "Bye!"
+  return 0
+}
+
+main "$@"
+

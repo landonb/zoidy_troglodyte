@@ -1,0 +1,32 @@
+---
+
+- name: Ensure /root/bin exists
+  become: true
+  file: path=/root/bin state=directory
+
+- name: Add Enemy IP intrusion detection email-alert script
+  become: true
+  template:
+    src: alert-ssh-login.j2
+    dest: /root/bin/alert-ssh-login
+    mode: 0775
+
+- name: Wire Enemy IP intrusion detection email-alert task to PAM sshd
+  become: true
+  lineinfile:
+    path: /etc/pam.d/sshd
+    # You could use `optional` so that user can still logon if script fails.
+    # But scripts is pretty tight, so make it required.
+    #   line: 'session optional pam_exec.so seteuid /root/bin/alert-ssh-login'
+    line: 'session required pam_exec.so seteuid /root/bin/alert-ssh-login'
+    regexp: '^session ([^ ]+) pam_exec.so seteuid /root/bin/alert-ssh-login$'
+  when: zoidy_troglodyte_pam_sshd_known_ips | length > 0
+
+- name: Disable Enemy IP intrusion detection email-alert task to PAM sshd
+  become: true
+  lineinfile:
+    path: /etc/pam.d/sshd
+    regexp: '^session ([^ ]+) pam_exec.so seteuid /root/bin/alert-ssh-login$'
+    state: absent
+  when: zoidy_troglodyte_pam_sshd_known_ips | length == 0
+
