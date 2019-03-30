@@ -9,8 +9,8 @@
     - disable-unused-services
     - install-packages-opsec
     - pam-sshd-overkill
-    - setup-apt-periodic
     - setup-ufw-firewall
     - setup-log-watch
     - ssh-harden-config
+    - unattended-installs
 

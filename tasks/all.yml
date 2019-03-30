@@ -24,15 +24,6 @@
 
 # ***
 
-- name: Configure unattended installs
-  include_role:
-    name: zoidy_troglodyte
-    tasks_from: setup-apt-periodic
-    apply:
-      tags:
-        - setup-apt-periodic
-  tags: setup-apt-periodic
-
 - name: Configure firewall
   include_role:
     name: zoidy_troglodyte
@@ -75,4 +66,15 @@
     - pam-sshd-overkill
     # This task is opt-in!
     - never
+
+# ***
+
+- name: Configure Unattended Installs
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: unattended-installs
+    apply:
+      tags:
+        - unattended-installs
+  tags: unattended-installs
 

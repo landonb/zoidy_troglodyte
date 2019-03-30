@@ -18,3 +18,11 @@ zoidy_troglodyte_pam_sshd_known_ips:
 # to override the default MOTD template (file).
 zoidy_troglodyte_pam_sshd_motd: ''
 
+zoidy_troglodyte_unattended_always: true
+zoidy_troglodyte_unattended_reboot: false
+# YOU: Set the pinnee to a hostname of a machine whose
+# kernel you do not want unnattendedly upgraded.
+# And set the kernel version to the version to pin.
+zoidy_troglodyte_unattended_pinnee: ''  # E.g., 'host'
+zoidy_troglodyte_unattended_kernel: ''  # E.g., '4.15.0-46'
+
