@@ -15,14 +15,4 @@
 
     # ufw - program for managing a Netfilter firewall
     - ufw
-    # fail2ban - ban hosts that cause multiple authentication errors
-    - fail2ban
-    # unattended-upgrades - automatic installation of security upgrades
-    - unattended-upgrades
-    # logwatch - log analyser with nice output written in Perl
-    - logwatch
-
-    # SSH alternative.
-    # mosh - Mobile shell that supports roaming and intelligent local echo
-    - mosh
 
