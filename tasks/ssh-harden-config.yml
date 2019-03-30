@@ -67,3 +67,15 @@
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_restrict_user != ''
 
+# ***
+
+# This is purely to limit attack vectors.
+# (lb): But I cannot think how inet6 could be exploited.
+- name: Limit SSH to listening on IPv4
+  become: true
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^AddressFamily"
+              line="AddressFamily inet"
+              state=present
+  notify: Restart sshd
+
