@@ -24,3 +24,31 @@
     state: stopped
     enabled: no
 
+# ***
+
+- name: Disable “very secure FTP daemon” (vsftpd) service
+  become: true
+  systemd:
+    name: vsftpd
+    state: stopped
+    enabled: no
+
+# ***
+
+- name: Disable rpcbind service (for serving NFS file systems)
+  become: true
+  systemd:
+    name: rpcbind
+    state: stopped
+    enabled: no
+
+# ***
+
+# (lb): I love postgres, but I only use it for jerbs!
+- name: Disable PostgreSQL service
+  become: true
+  systemd:
+    name: postgresql
+    state: stopped
+    enabled: no
+
