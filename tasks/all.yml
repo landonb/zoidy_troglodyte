@@ -13,17 +13,16 @@
         - install-packages-opsec
   tags: install-packages-opsec
 
-- name: Wire PAM SSH intrusion detection
+- name: Install opsec packages
   include_role:
     name: zoidy_troglodyte
-    tasks_from: pam-sshd-overkill
+    tasks_from: disable-unused-services
     apply:
       tags:
-        - pam-sshd-overkill
-  tags:
-    - pam-sshd-overkill
-    # This task is opt-in!
-    - never
+        - disable-unused-services
+  tags: disable-unused-services
+
+# ***
 
 - name: Configure unattended installs
   include_role:
@@ -62,4 +61,18 @@
       tags:
         - ssh-harden-config
   tags: ssh-harden-config
+
+# ***
+
+- name: Wire PAM SSH intrusion detection
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: pam-sshd-overkill
+    apply:
+      tags:
+        - pam-sshd-overkill
+  tags:
+    - pam-sshd-overkill
+    # This task is opt-in!
+    - never
 

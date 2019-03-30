@@ -1,0 +1,26 @@
+---
+
+# (lb): Both apache2 and nginx are installed by Linux Minut 19, and they'll
+# both compete for port 80, and on my machine, nginx seems to always wins.
+# - We could resolve this situation in a few different ways:
+#   - Ignore the problem, as it's not hurting anything (and we only needed
+#     the web server when we first stood up the machine, to install the SSH
+#     key, so that Anisble could run);
+#   - Edit nginx and/or apache config files to choose different port numbers;
+#   - Stop nginx and/or apache services, as it's not like I use either one.
+# I'm opting for the last option -- disable services you do not use!
+
+- name: Disable Apache2 service
+  become: true
+  systemd:
+    name: apache2
+    state: stopped
+    enabled: no
+
+- name: Disable nginx service
+  become: true
+  systemd:
+    name: nginx
+    state: stopped
+    enabled: no
+
