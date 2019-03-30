@@ -14,3 +14,7 @@ zoidy_troglodyte_ssh_restrict_macs: []
 zoidy_troglodyte_pam_sshd_known_ips:
   - "{{ ansible_hostname }}.lan"
 
+# YOU: Set this to the path of your message-of-the-day file,
+# to override the default MOTD template (file).
+zoidy_troglodyte_pam_sshd_motd: ''
+

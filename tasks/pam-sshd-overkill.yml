@@ -41,3 +41,23 @@
     line: 'session    optional     pam_mail.so quiet noenv # [1]'
     regexp: '^session    optional     pam_mail.so standard noenv # \[1\]$'
 
+# Display unauthorized usage warning. Really just a legal liability,
+# i.e., an accused breacher would not be able to claim that they were
+# not informated.
+- name: Display access warning on SSH logon — use default motd
+  become: true
+  template:
+    # Template of Fry running is courtesy:
+    #
+    #   http://www.gotfuturama.com/Multimedia/AsciiArt/FryRunning.shtml
+    src: motd.j2
+    dest: /etc/motd
+  when: zoidy_troglodyte_pam_sshd_motd == ''
+
+- name: On SSH logon, hacker can’t say I didn’t tell them so! — use user motd
+  become: true
+  copy:
+    src: "{{ zoidy_troglodyte_pam_sshd_motd }}"
+    dest: /etc/motd
+  when: zoidy_troglodyte_pam_sshd_motd != ''
+
