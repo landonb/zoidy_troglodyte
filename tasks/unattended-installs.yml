@@ -2,18 +2,6 @@
 
 # ***
 
-# (lb): I've got a wifi device that demands custom-built drivers, so don't
-# auto-update the kernel on these machines (otherwise they'll drop offline).
-- name: Disable auto-upgrading kernel on select hosts
-  shell: dconf write /com/linuxmint/updates/kernel-updates-are-safe "false"
-  when: ansible_hostname in zoidy_troglodyte_unattended_hosts_skip_kernel
-
-- name: Disable auto-upgrading kernel on select hosts
-  shell: dconf write /com/linuxmint/updates/kernel-updates-are-safe "true"
-  when: ansible_hostname not in zoidy_troglodyte_unattended_hosts_skip_kernel
-
-# ***
-
 # Place the same cron job that Update Manager places when you go to its
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
