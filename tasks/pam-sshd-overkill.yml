@@ -50,7 +50,7 @@
     # Template of Fry running is courtesy:
     #
     #   http://www.gotfuturama.com/Multimedia/AsciiArt/FryRunning.shtml
-    src: motd.j2
+    src: motd-fry.j2
     dest: /etc/motd
   when: zoidy_troglodyte_pam_sshd_motd == ''
 
