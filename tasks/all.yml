@@ -11,7 +11,9 @@
     apply:
       tags:
         - install-packages-opsec
-  tags: install-packages-opsec
+  tags:
+    - install-packages-opsec
+    - zoidy_troglodyte-default
 
 - name: Install opsec packages
   include_role:
@@ -20,7 +22,9 @@
     apply:
       tags:
         - disable-unused-services
-  tags: disable-unused-services
+  tags:
+    - disable-unused-services
+    - zoidy_troglodyte-default
 
 # ***
 
@@ -31,7 +35,9 @@
     apply:
       tags:
         - setup-ufw-firewall
-  tags: setup-ufw-firewall
+  tags:
+    - setup-ufw-firewall
+    - zoidy_troglodyte-default
 
 - name: Configure logwatch
   include_role:
@@ -40,7 +46,9 @@
     apply:
       tags:
         - setup-log-watch
-  tags: setup-log-watch
+  tags:
+    - setup-log-watch
+    - zoidy_troglodyte-default
 # FIXME/2018-12-16: Figure out how to wire emails, then setup logwatch.
   when: False
 
@@ -51,33 +59,7 @@
     apply:
       tags:
         - ssh-harden-config
-  tags: ssh-harden-config
-
-# ***
-
-- name: Wire PAM SSH intrusion detection
-  include_role:
-    name: zoidy_troglodyte
-    tasks_from: pam-sshd-overkill
-    apply:
-      tags:
-        - pam-sshd-overkill
   tags:
-    - pam-sshd-overkill
-    # This task is opt-in!
-    - never
-
-# ***
-
-- name: Configure Unattended Installs
-  include_role:
-    name: zoidy_troglodyte
-    tasks_from: unattended-installs
-    apply:
-      tags:
-        - unattended-installs
-  tags:
-    - unattended-installs
-    # This task is opt-in!
-    - never
+    - ssh-harden-config
+    - zoidy_troglodyte-default
 
