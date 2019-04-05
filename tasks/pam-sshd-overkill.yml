@@ -47,10 +47,10 @@
 - name: Display access warning on SSH logon — use default motd
   become: true
   template:
-    # Template of Fry running is courtesy:
+    # ASCII artwork courtesy:
     #
     #   http://www.gotfuturama.com/Multimedia/AsciiArt/FryRunning.shtml
-    src: motd-fry.j2
+    src: motd.j2
     dest: /etc/motd
   when: zoidy_troglodyte_pam_sshd_motd == ''
 
