@@ -12,6 +12,7 @@ zoidy_troglodyte_ssh_restrict_macs: []
 # YOU: Override this list to whitelist additional/different I.P. addresses.
 # zoidy_troglodyte_pam_sshd_known_ips: []
 zoidy_troglodyte_pam_sshd_known_ips:
+  - localhost
   - "{{ ansible_hostname }}.lan"
 
 # YOU: Set this to the path of your message-of-the-day file,
