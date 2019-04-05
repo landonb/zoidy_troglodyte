@@ -38,8 +38,10 @@
   become: true
   lineinfile:
     path: /etc/pam.d/sshd
-    line: 'session    optional     pam_mail.so quiet noenv # [1]'
-    regexp: '^session    optional     pam_mail.so standard noenv # \[1\]$'
+    line: 'session optional pam_mail.so quiet noenv # [1]'
+    # (lb): I'd swear on one machine this was 'standard', and on another,
+    # it was 'quiet' already'. So use `([^ ]+)` to match either.
+    regexp: '^session +optional +pam_mail.so ([^ ]+) noenv # \[1\]$'
 
 # Display unauthorized usage warning. Really just a legal liability,
 # i.e., an accused breacher would not be able to claim that they were
