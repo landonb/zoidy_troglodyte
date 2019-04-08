@@ -2,7 +2,7 @@
 
 - name: Setup ufw
   become: true
-  ufw: state=enabled policy=deny
+  ufw: state=enabled policy=deny direction=incoming
 
 - name: Remove existing UFW rules
   shell: >
