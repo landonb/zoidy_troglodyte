@@ -10,7 +10,7 @@
       grep "^\[" | \
       /bin/sed -r 's/^\[(.*)\].*/\1/' | \
       sort -r -n | \
-      xargs -I '{}' ufw delete {}
+      xargs -I '{}' ufw --force delete {}
   become: yes
 
 - name: Allow ssh traffic
