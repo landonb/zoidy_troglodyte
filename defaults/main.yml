@@ -22,3 +22,6 @@ zoidy_troglodyte_pam_sshd_motd: ''
 # YOU: Specify hosts here whose kernel should not be auto-upgraded.
 zoidy_troglodyte_unattended_hosts_skip_kernel: []
 
+# YOU: Specify other ports to allow through firewall.
+zoidy_troglodyte_firewall_ports: []
+

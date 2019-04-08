@@ -57,6 +57,32 @@
 
 # ***
 
+- name: Add iptables rules for user-specified service ports
+  # (lb): I can find neither --destination-port nor --dport documented.
+  # Works though.
+  shell: >
+    /sbin/iptables \
+      -A INPUT \
+      -p tcp \
+      --dport {{ item }} \
+      -j ACCEPT
+  become: yes
+  notify: Persist iptables
+  loop: "{{ zoidy_troglodyte_firewall_ports }}"
+  when: zoidy_troglodyte_firewall_ports | length > 0
+
+- name: Add ufw rules for user-specified service ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  become: yes
+  notify: Persist iptables
+  loop: "{{ zoidy_troglodyte_firewall_ports }}"
+  when: zoidy_troglodyte_firewall_ports | length > 0
+
+# ***
+
 - name: Install packages to persist/save iptables firewall settings across boots
   become: true
   apt: name={{ item }}
