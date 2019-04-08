@@ -30,7 +30,7 @@
 
 # ***
 
-- name: Clean existing INPUT rules
+- name: Clean existing iptables INPUT rules
   shell: >
     /sbin/iptables -L INPUT --line-numbers | \
       grep ACCEPT | \
