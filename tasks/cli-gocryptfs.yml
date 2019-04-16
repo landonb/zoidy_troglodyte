@@ -1,0 +1,94 @@
+---
+
+# gocryptfs
+
+# Get the latest release.
+
+# Download gocryptfs_vXXX_linux-static_amd64.tar.gz[.asc], as opposed
+# to e.g., gocryptfs_vXXX_src-deps.tar.gz[.asc],
+#       or gocryptfs_vXXX_src.tar.gz[.asc].
+- name: Determine gocryptfs latest release
+  shell: |
+    curl -s https://api.github.com/repos/rfjakob/gocryptfs/releases | \
+    jq -r ".[0].assets | .[].browser_download_url" | \
+    grep "linux-static_amd64.tar.gz$"
+  args:
+    # shell does not appreciate us using curl, preferring we use its get_url.
+    warn: False
+  register: gocryptfs_release_uri
+
+# ***
+
+- name: Form latest gocryptfs release filename
+  set_fact:
+    gocryptfs_release_name: "{{ gocryptfs_release_uri.stdout | basename }}"
+
+- name: Stat latest gocryptfs release archive
+  stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
+  register: gocryptfs_release_archive_f
+
+- name: Download latest gocryptfs release archive
+  get_url:
+    url: "{{ gocryptfs_release_uri.stdout }}"
+    dest: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
+  when: not gocryptfs_release_archive_f.stat.exists
+
+- name: Stat latest gocryptfs release archive armored ASCII file
+  stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}.asc"
+  register: gocryptfs_release_archive_asc_f
+
+- name: Download latest gocryptfs release archive armored ASCII file
+  get_url:
+    url: "{{ gocryptfs_release_uri.stdout }}.asc"
+    dest: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}.asc"
+  when: not gocryptfs_release_archive_asc_f.stat.exists
+
+# ***
+
+- name: Stat gocryptfs signing key
+  stat: path="{{ zoidy_homefries_downloads_dir }}/gocryptfs-signing-key.pub"
+  register: gocryptfs_signing_key_f
+
+- name: Download gocryptfs signing key
+  get_url:
+    # https://nuetzlich.net/gocryptfs/releases/
+    url: "https://nuetzlich.net/gocryptfs-signing-key.pub"
+    dest: "{{ zoidy_homefries_downloads_dir }}/gocryptfs-signing-key.pub"
+  when: not gocryptfs_signing_key_f.stat.exists
+
+# Meh. There's a module for that:
+#
+#   https://github.com/onaio/ansible-gpg-import
+- name: Import gocryptfs signing key
+  command: "gpg --import gocryptfs-signing-key.pub"
+  args:
+    chdir: "{{ zoidy_homefries_downloads_dir }}"
+  when: not gocryptfs_signing_key_f.stat.exists
+
+# This'll fail on nonzero return code.
+- name: "Verify gocryptfs download"
+  command: "gpg --verify {{ gocryptfs_release_name }}.asc {{ gocryptfs_release_name }}"
+  args:
+    chdir: "{{ zoidy_homefries_downloads_dir }}"
+
+# Unpack the release. Essentially runs, e.g.,
+#   tar -xvzf gocryptfs_vXXX_linux-static_amd64.tar.gz -C ~/.local/bin
+# which copies the two files: gocryptfs, and gocryptfs.1.
+- name: Unarchive/Unpack gocryptfs executable
+  unarchive:
+    src: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
+    dest: "{{ zoidy_homefries_user_local_bin_dir }}/"
+    exclude:
+      # There are 2 items in the archive: gocryptfs gocryptfs.1
+      - gocryptfs.1
+    remote_src: yes
+
+- name: Unarchive/Unpack gocryptfs man page
+  unarchive:
+    src: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
+    dest: "{{ zoidy_homefries_user_local_dir }}/man/man1"
+    exclude:
+      # There are 2 items in the archive: gocryptfs gocryptfs.1
+      - gocryptfs
+    remote_src: yes
+

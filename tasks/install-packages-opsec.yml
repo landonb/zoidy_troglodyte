@@ -13,6 +13,12 @@
   apt: name={{ item }}
   loop:
 
+    # pass - lightweight directory-based password manager
+    - pass
+
+    # tomb - crypto undertaker
+    - tomb
+
     # ufw - program for managing a Netfilter firewall
     - ufw
 

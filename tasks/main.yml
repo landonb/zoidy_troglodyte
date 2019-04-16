@@ -23,6 +23,7 @@
     - setup-ufw-firewall
     - setup-log-watch
     - ssh-harden-config
+    - cli-gocryptfs
 
 # ***
 

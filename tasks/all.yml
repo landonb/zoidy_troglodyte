@@ -15,7 +15,7 @@
     - install-packages-opsec
     - zoidy_troglodyte-default
 
-- name: Install opsec packages
+- name: Disable unused packages
   include_role:
     name: zoidy_troglodyte
     tasks_from: disable-unused-services
@@ -49,7 +49,7 @@
   tags:
     - setup-log-watch
     - zoidy_troglodyte-default
-# FIXME/2018-12-16: Figure out how to wire emails, then setup logwatch.
+# FIXME/2019-04-16: Emails are wired (to personal Gmail); now setup logwatch.
   when: False
 
 - name: Disable Password Auth & Root SSH Login
@@ -62,4 +62,15 @@
   tags:
     - ssh-harden-config
     - zoidy_troglodyte-default
+
+# ***
+
+- name: Install Latest gocryptfs release
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: cli-gocryptfs
+    apply:
+      tags:
+        - cli-gocryptfs
+  tags: cli-gocryptfs
 
