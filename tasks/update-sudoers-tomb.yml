@@ -4,7 +4,17 @@
   become: yes
   lineinfile:
     dest: /etc/sudoers
-    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb$"
+    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb"
+    state: present
+
+# ***
+
+- name: Add e2label-show to sudoers, so travel.sh may identify specific tombs
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
+    line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     state: present
 
