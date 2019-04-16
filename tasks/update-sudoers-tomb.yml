@@ -1,0 +1,10 @@
+---
+
+- name: Add tomb to sudoers, to avoid double-prompting
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb$"
+    line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb"
+    state: present
+

@@ -24,6 +24,7 @@
     - setup-log-watch
     - ssh-harden-config
     - cli-gocryptfs
+    - update-sudoers-tomb
 
 # ***
 

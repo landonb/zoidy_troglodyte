@@ -74,3 +74,12 @@
         - cli-gocryptfs
   tags: cli-gocryptfs
 
+- name: Let anyuser elevate ‘tomb’
+  include_role:
+    name: zoidy_troglodyte
+    tasks_from: update-sudoers-tomb
+    apply:
+      tags:
+        - update-sudoers-tomb
+  tags: update-sudoers-tomb
+
