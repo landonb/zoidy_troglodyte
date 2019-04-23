@@ -22,3 +22,10 @@
     # ufw - program for managing a Netfilter firewall
     - ufw
 
+    # binwalk - tool library for analyzing binary blobs and executable code
+    - binwalk
+    # foremost - forensic program to recover lost files
+    - foremost - forensic program to recover lost files
+    # pgpdump - PGP packet visualizer
+    - pgpdump
+
