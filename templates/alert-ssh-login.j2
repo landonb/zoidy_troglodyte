@@ -52,6 +52,7 @@ set_who_they_are () {
   # Here we support running locally (mostly for testing).
   [[ -n $PAM_USER ]] && ENEMY_USER=$PAM_USER || ENEMY_USER=$LOGNAME
   # PAM_RHOST is, e.g., "host.lan".
+  # SSH_CONNECTION is, e.g., "192.168.11.22 345 192.168.11.66 789"
   [[ -n $PAM_RHOST ]] && ENEMY_IP=$PAM_RHOST || ENEMY_IP=${SSH_CONNECTION%% *}
 }
 
