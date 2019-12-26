@@ -14,6 +14,15 @@ zoidy_troglodyte_ssh_restrict_macs: []
 zoidy_troglodyte_pam_sshd_known_ips:
   - localhost
   - "{{ ansible_hostname }}.lan"
+  # YOU: You can glob to match a subnet, e.g.,
+  # - 192.168.11.*
+  # BEWARE: (lb): I wonder if someone could name a machine "192.168.11",
+  # so that it reports as "192.168.11.lan", thereby deceiving our check!
+  # However, the alert-ssh-login feature is for the super-paranoid (me!)
+  # and it's super unlikely anyone will have stolen your SSH keys, or that
+  # you've misconfigured SSH and allowed another attack vector, so I'm not
+  # going to worry about this any further. Just a note that I'm aware of the
+  # glaring security hole with regex matching here.
 
 # YOU: Set this to the path of your message-of-the-day file,
 # to override the default MOTD template (file).
