@@ -8,7 +8,7 @@
   shell: >
     ufw status numbered | \
       grep "^\[" | \
-      /bin/sed -r 's/^\[(.*)\].*/\1/' | \
+      sed -E 's/^\[(.*)\].*/\1/' | \
       sort -r -n | \
       xargs -I '{}' ufw --force delete {}
   become: yes
