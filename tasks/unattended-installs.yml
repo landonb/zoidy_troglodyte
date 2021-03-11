@@ -2,6 +2,8 @@
 
 # ***
 
+# mintupdate aka unattended-installs aka unattended-upgrades
+
 # Place the same cron job that Update Manager places when you go to its
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
