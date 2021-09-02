@@ -25,7 +25,7 @@
     # binwalk - tool library for analyzing binary blobs and executable code
     - binwalk
     # foremost - forensic program to recover lost files
-    - foremost - forensic program to recover lost files
+    - foremost
     # pgpdump - PGP packet visualizer
     - pgpdump
 
