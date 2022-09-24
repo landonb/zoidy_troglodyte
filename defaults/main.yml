@@ -9,10 +9,12 @@ zoidy_troglodyte_mosh_port_end: 60010
 zoidy_troglodyte_ssh_restrict_user: ''
 zoidy_troglodyte_ssh_restrict_macs: []
 
-# YOU: Override this list to whitelist additional/different I.P. addresses.
+# YOU: Override this list to allowlist additional/different I.P. addresses.
 # zoidy_troglodyte_pam_sshd_known_ips: []
 zoidy_troglodyte_pam_sshd_known_ips:
   - localhost
+  # `::1` is IPv6 localhost.
+  - ::1
   - "{{ ansible_hostname }}.lan"
   # YOU: You can glob to match a subnet, e.g.,
   # - 192.168.11.*
