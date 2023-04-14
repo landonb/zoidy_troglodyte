@@ -12,9 +12,12 @@
     curl -s https://api.github.com/repos/rfjakob/gocryptfs/releases | \
     jq -r ".[0].assets | .[].browser_download_url" | \
     grep "linux-static_amd64.tar.gz$"
-  args:
-    # shell does not appreciate us using curl, preferring we use its get_url.
-    warn: False
+  # 2023-04-14: An older shell (pre ansible.builtin.shell?) did not
+  # appreciate us using curl, preferring we use its get_url, and would
+  # warn against it. But latest Ansible does not have 'warn' option
+  # (nor does it warn against 'curl' anymore, as far as I've seen).
+  #   args:
+  #     warn: False
   register: gocryptfs_release_uri
 
 # ***

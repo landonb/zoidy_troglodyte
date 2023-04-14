@@ -8,8 +8,10 @@
   become: yes
   # Note: This creates /etc/iptables/rules.v4|v6
   command: service netfilter-persistent save
-  args:
-    # Note that 'save' is not a valid (Ansible) service module state.
-    #   service: name=netfilter-persistent state=save
-    warn: False
+  # 2023-04-14: An older shell (pre ansible.builtin.shell?) warned to
+  # tell us that 'save' is not a valid (Ansible) service module state.
+  # But latest Ansible does not have 'warn' option (nor does it warn
+  # against 'save' state anymore, as far as I've seen).
+  #   args:
+  #     warn: False
 
