@@ -1,5 +1,6 @@
 ---
 
+# I.e., sudo systemctl restart ssh
 - name: Restart sshd
   become: yes
   service: name=sshd state=restarted
