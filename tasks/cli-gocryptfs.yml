@@ -74,6 +74,12 @@
   args:
     chdir: "{{ zoidy_homefries_downloads_dir }}"
 
+# ***
+
+- name: Ensure ~/.local/bin directory exists
+  file: path="{{ zoidy_homefries_user_local_bin_dir }}" state=directory
+  tags: always
+
 # Unpack the release. Essentially runs, e.g.,
 #   tar -xvzf gocryptfs_vXXX_linux-static_amd64.tar.gz -C ~/.local/bin
 # which copies the two files: gocryptfs, and gocryptfs.1.
@@ -85,6 +91,12 @@
       # There are 2 items in the archive: gocryptfs gocryptfs.1
       - gocryptfs.1
     remote_src: yes
+
+# ***
+
+- name: Ensure ~/.local/man/man1 directory exists
+  file: path="{{ zoidy_homefries_user_local_dir }}/man/man1" state=directory
+  tags: always
 
 - name: Unarchive/Unpack gocryptfs man page
   unarchive:
