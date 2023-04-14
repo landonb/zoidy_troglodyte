@@ -1,8 +1,38 @@
 ---
 
-- name: Setup ufw
+# REFER/2023-04-12: Reset iptables:
+#   sudo iptables -F  # BWARE: Will block (though not kill) existing SSH sessions
+#                     #        (i.e., you'll need to logon directly to recover).
+#   sudo ufw reset    # DUNNO: I haven't investigated to know if this does same
+#                     #        as `iptables -F` or something different.
+# You can also reset each chain separately: 
+#   iptables -F INPUT 
+#   iptables -F OUTPUT
+#   iptables -F FORWARD
+# SAVVY: Use this if you see [UFW BLOCK] in /var/log/syslog, e.g., reset
+#        the firewall so Anisble can connect, then run this task again.
+#   iptables -P INPUT ACCEPT
+#   ip6tables -P INPUT ACCEPT
+# You can also allow all on each chain (effectively disabling the firewall):
+#   iptables -P INPUT ACCEPT
+#   iptables -P OUTPUT ACCEPT
+#   iptables -P FORWARD ACCEPT
+# For way more information than you really need (but that StackOverflowers
+# tend to request), generate a --verbose, --numeric report:
+#   iptables/ip6tables -L [INPUT] -v -n
+
+# ***
+
+# Start by accepting all incoming, so that the rules we set don't block
+# Ansible while working through this task.
+#
+# E.g.,
+#   sudo iptables -P INPUT ACCEPT
+# Or:
+#   sudo ufw default accept incoming
+- name: Allow all incoming traffic ufw
   become: true
-  ufw: state=enabled policy=deny direction=incoming
+  ufw: state=enabled policy=allow direction=incoming
 
 - name: Remove existing UFW rules
   ansible.builtin.shell: >
@@ -13,12 +43,15 @@
       xargs -I '{}' ufw --force delete {}
   become: yes
 
+# E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
   become: true
   ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
   when: zoidy_troglodyte_ssh_restrict_macs | length == 0
 
-# https://en.wikipedia.org/wiki/Mosh_(software)
+# NOTED/2023-04-13: I've never enabled Mosh (mobile shell) traffic. (I just use SSH.)
+# - I don't know much about Mosh. Sounds similar to `screen` or `tmux`.
+# CXREF: https://en.wikipedia.org/wiki/Mosh_(software)
 - name: Allow mosh traffic
   become: true
   ufw:
@@ -30,48 +63,57 @@
 
 # ***
 
-- name: Clean existing iptables INPUT rules
+# - SAVVY/2023-04-13: We set ACCEPT all previously (until we default deny
+#   incoming later), which means first line of `iptables -L INPUT` includes
+#   ACCEPT, e.g.,:
+#     Chain INPUT (policy ACCEPT)
+#   - We ignore this line with an inverted match (grep -v).
+- name: Delete existing iptables/ip6tables INPUT rules
   ansible.builtin.shell: >
-    /sbin/iptables -L INPUT --line-numbers | \
+    /sbin/{{ item }} -L INPUT --line-numbers | \
       grep ACCEPT | \
+      grep -v "policy ACCEPT" | \
       awk '{print $1}' | \
       sort -r -n | \
-      xargs -I '{}' /sbin/iptables --delete INPUT {}
+      xargs -I '{}' /sbin/{{ item }} --delete INPUT {}
   become: yes
+  loop:
+    - iptables
+    - ip6tables
 
 # E.g.,
-#   /sbin/iptables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
-- name: Allow ssh traffic from *just my devices*
+#   sudo iptables  -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
+#   sudo ip6tables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
+- name: "Allow ssh traffic from *just my devices* (based on their MACs)"
   ansible.builtin.shell: >
-    /sbin/iptables \
+    /sbin/{{ item[0] }} \
       -A INPUT \
       -p tcp \
       --destination-port {{ zoidy_troglodyte_ssh_port }} \
       -m mac \
-      --mac-source {{ item }} \
+      --mac-source {{ item[1] }} \
       -j ACCEPT
   become: yes
   notify: Persist iptables
-  loop: "{{ zoidy_troglodyte_ssh_restrict_macs }}"
+  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_ssh_restrict_macs) | list }}"
   when: zoidy_troglodyte_ssh_restrict_macs | length > 0
 
 # ***
 
-- name: Add iptables rules for user-specified service ports
-  # (lb): I can find neither --destination-port nor --dport documented.
-  # Works though.
+# CXREF: See `man 8 iptables-extensions` for --dport/--destination-port docs.
+- name: Add ip6tables rules for user-specified service ports
   ansible.builtin.shell: >
-    /sbin/iptables \
+    /sbin/{{ item[0] }} \
       -A INPUT \
       -p tcp \
-      --dport {{ item }} \
+      --dport {{ item[1] }} \
       -j ACCEPT
   become: yes
   notify: Persist iptables
-  loop: "{{ zoidy_troglodyte_firewall_ports }}"
+  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports) | list }}"
   when: zoidy_troglodyte_firewall_ports | length > 0
 
-- name: Add ufw rules for user-specified service ports
+- name: "Add ufw rules for user-specified service ports (if you've defined any)"
   ufw:
     rule: allow
     port: "{{ item }}"
@@ -83,7 +125,49 @@
 
 # ***
 
-- name: Install packages to persist/save iptables firewall settings across boots
+# - SAVVY/2023-04-13: Note that conntrack supersedes state, e.g.,
+#     iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+#   is an alias to
+#     iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# - SAVVY/2023-04-13: These rules are necessary for -P INPUT DROP to work
+#   as intended (otherwise outbound connections can be made, but your app
+#   won't see any responses from the remote).
+- name: Accept incoming packets for outbound connections (received as part of established connection)
+  ansible.builtin.shell: >
+    /sbin/{{ item }} -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  become: yes
+  loop:
+    - iptables
+    - ip6tables
+
+# - SAVVY/2023-04-13: Inbound packets for established connections don't
+#   work for me without also accepting all inbound packets from localhost.
+- name: Accept incoming packets for outbound connections (received as part of established connection)
+  ansible.builtin.shell: >
+    /sbin/{{ item }} -A INPUT -i lo -j ACCEPT
+  become: yes
+  loop:
+    - iptables
+    - ip6tables
+
+# This completes firewall setup, if you've updated group_vars correctly (in
+#   ~/.zoidy/group_vars/zoidy_troglodyte
+# ) and if this task is current with the latest iptables version.
+# - If not, you might lose access via Ansible, and you'll need to logon the
+#   managed node directly, run `sudo iptables -P INPUT ACCEPT`, and then fix
+#   the problem(s).
+#
+# Runs, e.g.,
+#   sudo iptables -P INPUT DROP
+# Or:
+#   sudo ufw default deny incoming
+- name: Default ufw deny incoming
+  become: true
+  ufw: state=enabled policy=deny direction=incoming
+
+# ***
+
+- name: Install packages to persist/save iptables/ip6tables firewall settings across boots
   become: true
   ansible.builtin.apt: name={{ item }}
   loop:
