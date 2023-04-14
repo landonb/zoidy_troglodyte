@@ -123,10 +123,15 @@ element_in () {
   local pattern
   local element="$1"
   shift
+
   # So that globbing works, e.g., [[ 192.168.11.123 == 192.168.11.* ]]
   # put pattern on right (Bash only honors '*' to right of operator);
   # and avoid quotes.
-  for pattern; do [[ ${element} == ${pattern} ]] && return 0; done
+  for pattern; do
+    [[ "${element}" == ${pattern} ]] &&
+      return 0
+  done
+
   return 1
 }
 
