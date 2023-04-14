@@ -2,15 +2,15 @@
 
 - name: Update APT package cache
   become: true
-  apt: update_cache=yes cache_valid_time=3600
+  ansible.builtin.apt: update_cache=yes cache_valid_time=3600
 
 - name: Upgrade APT to the latest packages
   become: true
-  apt: upgrade=safe
+  ansible.builtin.apt: upgrade=safe
 
 - name: 'Install opsec packages'
   become: true
-  apt: name={{ item }}
+  ansible.builtin.apt: name={{ item }}
   loop:
 
     # pass - lightweight directory-based password manager

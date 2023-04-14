@@ -8,7 +8,7 @@
 # to e.g., gocryptfs_vXXX_src-deps.tar.gz[.asc],
 #       or gocryptfs_vXXX_src.tar.gz[.asc].
 - name: Determine gocryptfs latest release
-  shell: |
+  ansible.builtin.shell: |
     curl -s https://api.github.com/repos/rfjakob/gocryptfs/releases | \
     jq -r ".[0].assets | .[].browser_download_url" | \
     grep "linux-static_amd64.tar.gz$"

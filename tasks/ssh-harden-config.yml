@@ -2,80 +2,89 @@
 
 - name: Disallow password authentication
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^PasswordAuthentication"
-              line="PasswordAuthentication no"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
 
 - name: Disallow root SSH access
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^PermitRootLogin"
-              line="PermitRootLogin no"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+    state: present
   notify: Restart sshd
 
 - name: Allow only this user to SSH-connect
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^AllowUsers"
-              line="AllowUsers {{ ansible_env.LOGNAME }}"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^AllowUsers"
+    line: "AllowUsers {{ ansible_env.LOGNAME }}"
+    state: present
   notify: Restart sshd
 
 - name: Change SSH server port number
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^Port\s"
-              line="Port {{ zoidy_troglodyte_ssh_port }}"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^Port\\s"
+    line: "Port {{ zoidy_troglodyte_ssh_port }}"
+    state: present
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
 
 - name: Disallow X11 traffic forwarding
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^X11Forwarding"
-              line="X11Forwarding no"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^X11Forwarding"
+    line: "X11Forwarding no"
+    state: present
   notify: Restart sshd
 
 - name: Enable DNS hostname checking (verify caller IP)
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^UseDNS"
-              line="UseDNS yes"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^UseDNS"
+    line: "UseDNS yes"
+    state: present
   notify: Restart sshd
 
 - name: Halve the number of connection attempts (to 3 from 6)
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^MaxAuthTries"
-              line="MaxAuthTries 3"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^MaxAuthTries"
+    line: "MaxAuthTries 3"
+    state: present
   notify: Restart sshd
 
 # ***
 
 - name: Restrict SSH to specific user(s), perhaps
   become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^AllowUsers"
-              line="AllowUsers {{ zoidy_troglodyte_ssh_restrict_user }}"
-              state=present
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^AllowUsers"
+    line: "AllowUsers {{ zoidy_troglodyte_ssh_restrict_user }}"
+    state: present
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_restrict_user != ''
 
 # ***
 
-# This is purely to limit attack vectors.
-# (lb): But I cannot think how inet6 could be exploited.
-- name: Limit SSH to listening on IPv4
-  become: true
-  lineinfile: dest=/etc/ssh/sshd_config
-              regexp="^AddressFamily"
-              line="AddressFamily inet"
-              state=present
-  notify: Restart sshd
+# # This is purely to limit attack vectors.
+# # (lb): But I cannot think how inet6 could be exploited.
+# - name: Limit SSH to listening on IPv4
+#   become: true
+#   lineinfile:
+#     dest: /etc/ssh/sshd_config
+#     regexp: "^AddressFamily"
+#     line: "AddressFamily inet"
+#     state: present
+#   notify: Restart sshd
 

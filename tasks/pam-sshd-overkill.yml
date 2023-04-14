@@ -13,7 +13,7 @@
 
 - name: Wire Enemy IP intrusion detection email-alert task to PAM sshd
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/pam.d/sshd
     # You could use `optional` so that user can still logon if script fails.
     # But scripts is pretty tight, so make it required.
@@ -24,7 +24,7 @@
 
 - name: Disable Enemy IP intrusion detection email-alert task to PAM sshd
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/pam.d/sshd
     regexp: '^session ([^ ]+) pam_exec.so seteuid /root/bin/alert-ssh-login$'
     state: absent
@@ -36,7 +36,7 @@
 
 - name: On SSH logon, only tell user if new mail (i.e., not empty mailbox)
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/pam.d/sshd
     line: 'session optional pam_mail.so quiet noenv # [1]'
     # (lb): I'd swear on one machine this was 'standard', and on another,
@@ -58,7 +58,7 @@
 
 - name: On SSH logon, hacker can’t say I didn’t tell them so! — use user motd
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ zoidy_troglodyte_pam_sshd_motd }}"
     dest: /etc/motd
   when: zoidy_troglodyte_pam_sshd_motd != ''

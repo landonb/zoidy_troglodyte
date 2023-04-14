@@ -5,7 +5,7 @@
   ufw: state=enabled policy=deny direction=incoming
 
 - name: Remove existing UFW rules
-  shell: >
+  ansible.builtin.shell: >
     ufw status numbered | \
       grep "^\[" | \
       sed -E 's/^\[(.*)\].*/\1/' | \
@@ -31,7 +31,7 @@
 # ***
 
 - name: Clean existing iptables INPUT rules
-  shell: >
+  ansible.builtin.shell: >
     /sbin/iptables -L INPUT --line-numbers | \
       grep ACCEPT | \
       awk '{print $1}' | \
@@ -42,7 +42,7 @@
 # E.g.,
 #   /sbin/iptables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
 - name: Allow ssh traffic from *just my devices*
-  shell: >
+  ansible.builtin.shell: >
     /sbin/iptables \
       -A INPUT \
       -p tcp \
@@ -60,7 +60,7 @@
 - name: Add iptables rules for user-specified service ports
   # (lb): I can find neither --destination-port nor --dport documented.
   # Works though.
-  shell: >
+  ansible.builtin.shell: >
     /sbin/iptables \
       -A INPUT \
       -p tcp \
@@ -85,7 +85,7 @@
 
 - name: Install packages to persist/save iptables firewall settings across boots
   become: true
-  apt: name={{ item }}
+  ansible.builtin.apt: name={{ item }}
   loop:
     - netfilter-persistent
     - iptables-persistent
@@ -138,17 +138,19 @@
   become: true
   # DEFAULT:
   # Wants=systemd-modules-load.service local-fs.target
-  lineinfile: dest=/lib/systemd/system/netfilter-persistent.service
-              regexp="^Wants="
-              line="Wants=systemd-modules-load.service local-fs.target ufw.service"
-              state=present
+  ansible.builtin.lineinfile:
+    dest: /lib/systemd/system/netfilter-persistent.service
+    regexp: "^Wants="
+    line: "Wants=systemd-modules-load.service local-fs.target ufw.service"
+    state: present
 
 - name: "Ensure that netfilter-persistent starts after UFW, via After="
   become: true
   # DEFAULT:
   # After=systemd-modules-load.service local-fs.target
-  lineinfile: dest=/lib/systemd/system/netfilter-persistent.service
-              regexp="^After="
-              line="After=systemd-modules-load.service local-fs.target ufw.service"
-              state=present
+  ansible.builtin.lineinfile:
+    dest: /lib/systemd/system/netfilter-persistent.service
+    regexp: "^After="
+    line: "After=systemd-modules-load.service local-fs.target ufw.service"
+    state: present
 
