@@ -502,8 +502,11 @@ EOF
 # ***
 
 set_alert_if_unknown_host_or_addy () {
-  if ! element_in "${ENEMY_HOST}" "${KNOWN_HOSTS[@]}"; then
-    add_alert_reason "unlisted hostname"
+  # 2023-04-13: Over IPv6, PAM_RHOST is the same IPv6 as SSH_CONNECTION reports.
+  if [ "${ENEMY_HOST}" != "${ENEMY_ADDY}" ]; then
+    if ! element_in "${ENEMY_HOST}" "${KNOWN_HOSTS[@]}"; then
+      add_alert_reason "unlisted hostname"
+    fi
   fi
 
   if ! element_in "${ENEMY_ADDY}" "${KNOWN_IPS[@]}"; then
