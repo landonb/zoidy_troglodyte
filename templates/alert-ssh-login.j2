@@ -357,7 +357,7 @@ print_environment () {
 <pre>
 \$(env)
 ======
-$(env)
+$(env | sed "/^SSH_AUTH_INFO_0=/d")
 EOF
 
   # ***
