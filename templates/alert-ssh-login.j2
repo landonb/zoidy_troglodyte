@@ -87,7 +87,7 @@
 # YOU: Setup postfix and create /home/user/.forward if you
 #      want to have sent emails forwarded to, say, Gmail.
 #      - CXREF:
-#        ~/.kit/ansible/roles/zoidy_home-fries/tasks/email-gmail-postfix.yml
+#        ~/.kit/ansible/roles/zoidy_apps_et_al/tasks/email-gmail-postfix.yml
 SEND_EMAIL_TO="{{ ansible_env.LOGNAME }}@$(hostname)"
 SEND_EMAIL_FROM="$(basename $0)@$(hostname)"
 
