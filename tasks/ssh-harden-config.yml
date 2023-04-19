@@ -26,6 +26,9 @@
     state: present
   notify: Restart sshd
 
+# FIXME/2023-04-19 15:07: This is untested, and I wonder if this should be
+# done when sshd is restarted on the managed node, i.e., move this task to
+# the "Restart sshd" handler.
 - name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
   become: true
   lineinfile:
