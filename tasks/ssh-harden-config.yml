@@ -26,7 +26,7 @@
     state: present
   notify: Restart sshd
 
-- name: Change SSH server port number
+- name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
   become: true
   lineinfile:
     dest: /etc/ssh/sshd_config
@@ -34,6 +34,16 @@
     line: "Port {{ zoidy_troglodyte_ssh_port }}"
     state: present
   notify: Restart sshd
+  when: zoidy_troglodyte_ssh_port != 22
+
+- name: "Change control node's SSH remote port number — localhost:~/.ssh/config"
+  delegate_to: localhost
+  lineinfile:
+    dest: ~/.ssh/config
+    insertafter: "^Host {{ ansible_hostname }}$"
+    regexp: "\tPort\\s"
+    line: "\tPort {{ zoidy_troglodyte_ssh_port }}"
+    state: present
   when: zoidy_troglodyte_ssh_port != 22
 
 - name: Disallow X11 traffic forwarding
