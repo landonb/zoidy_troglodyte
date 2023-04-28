@@ -8,7 +8,7 @@
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
   become: yes
-  copy:
+  ansible.builtin.copy:
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
     mode: 0775

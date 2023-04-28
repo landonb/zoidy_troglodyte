@@ -2,11 +2,11 @@
 
 - name: Ensure /root/bin exists
   become: true
-  file: path=/root/bin state=directory
+  ansible.builtin.file: path=/root/bin state=directory
 
 - name: Add Enemy IP intrusion detection email-alert script
   become: true
-  template:
+  ansible.builtin.template:
     src: alert-ssh-login.j2
     dest: /root/bin/alert-ssh-login
     mode: 0775
@@ -48,7 +48,7 @@
 # not informated.
 - name: Display access warning on SSH logon — use default motd
   become: true
-  template:
+  ansible.builtin.template:
     # ASCII artwork courtesy:
     #
     #   http://www.gotfuturama.com/Multimedia/AsciiArt/FryRunning.shtml

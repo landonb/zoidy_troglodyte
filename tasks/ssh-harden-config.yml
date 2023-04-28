@@ -2,7 +2,7 @@
 
 - name: Disallow password authentication
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^PasswordAuthentication"
     line: "PasswordAuthentication no"
@@ -10,7 +10,7 @@
 
 - name: Disallow root SSH access
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^PermitRootLogin"
     line: "PermitRootLogin no"
@@ -19,7 +19,7 @@
 
 - name: Allow only this user to SSH-connect
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^AllowUsers"
     line: "AllowUsers {{ ansible_env.LOGNAME }}"
@@ -31,7 +31,7 @@
 # the "Restart sshd" handler.
 - name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^Port\\s"
     line: "Port {{ zoidy_troglodyte_ssh_port }}"
@@ -41,7 +41,7 @@
 
 - name: "Change control node's SSH remote port number — localhost:~/.ssh/config"
   delegate_to: localhost
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: ~/.ssh/config
     insertafter: "^Host {{ ansible_hostname }}$"
     regexp: "\tPort\\s"
@@ -51,7 +51,7 @@
 
 - name: Disallow X11 traffic forwarding
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^X11Forwarding"
     line: "X11Forwarding no"
@@ -60,7 +60,7 @@
 
 - name: Enable DNS hostname checking (verify caller IP)
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^UseDNS"
     line: "UseDNS yes"
@@ -69,7 +69,7 @@
 
 - name: Halve the number of connection attempts (to 3 from 6)
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^MaxAuthTries"
     line: "MaxAuthTries 3"
@@ -80,7 +80,7 @@
 
 - name: Restrict SSH to specific user(s), perhaps
   become: true
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^AllowUsers"
     line: "AllowUsers {{ zoidy_troglodyte_ssh_restrict_user }}"
@@ -94,7 +94,7 @@
 # # (lb): But I cannot think how inet6 could be exploited.
 # - name: Limit SSH to listening on IPv4
 #   become: true
-#   lineinfile:
+#   ansible.builtin.lineinfile:
 #     dest: /etc/ssh/sshd_config
 #     regexp: "^AddressFamily"
 #     line: "AddressFamily inet"

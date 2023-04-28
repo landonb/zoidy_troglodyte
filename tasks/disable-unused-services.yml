@@ -12,14 +12,14 @@
 
 - name: Disable Apache2 service
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: apache2
     state: stopped
     enabled: no
 
 - name: Disable nginx service
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: nginx
     state: stopped
     enabled: no
@@ -28,7 +28,7 @@
 
 - name: Disable “very secure FTP daemon” (vsftpd) service
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: vsftpd
     state: stopped
     enabled: no
@@ -37,7 +37,7 @@
 
 - name: Disable rpcbind service (for serving NFS file systems)
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: rpcbind
     state: stopped
     enabled: no
@@ -47,7 +47,7 @@
 # (lb): I love postgres, but I only use it for jerbs!
 - name: Disable PostgreSQL service
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: postgresql
     state: stopped
     enabled: no

@@ -2,7 +2,7 @@
 
 - name: Set up Postfix to relay mail
   become: true
-  debconf:
+  ansible.builtin.debconf:
     name: postfix
     question: '{{ item.question }}'
     value: '{{ item.value }}'

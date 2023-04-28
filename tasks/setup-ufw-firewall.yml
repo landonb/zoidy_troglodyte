@@ -32,7 +32,7 @@
 #   sudo ufw default accept incoming
 - name: Allow all incoming traffic ufw
   become: true
-  ufw: state=enabled policy=allow direction=incoming
+  ansible.builtin.ufw: state=enabled policy=allow direction=incoming
 
 - name: Remove existing UFW rules
   ansible.builtin.shell: >
@@ -46,7 +46,7 @@
 # E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
   become: true
-  ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
+  ansible.builtin.ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
   when: zoidy_troglodyte_ssh_restrict_macs | length == 0
 
 # NOTED/2023-04-13: I've never enabled Mosh (mobile shell) traffic. (I just use SSH.)
@@ -54,7 +54,7 @@
 # CXREF: https://en.wikipedia.org/wiki/Mosh_(software)
 - name: Allow mosh traffic
   become: true
-  ufw:
+  ansible.builtin.ufw:
     rule: allow
     proto: udp
     port: "{{ zoidy_troglodyte_mosh_port_beg }}:{{ zoidy_troglodyte_mosh_port_end }}"
@@ -114,7 +114,7 @@
   when: zoidy_troglodyte_firewall_ports | length > 0
 
 - name: "Add ufw rules for user-specified service ports (if you've defined any)"
-  ufw:
+  ansible.builtin.ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
@@ -163,7 +163,7 @@
 #   sudo ufw default deny incoming
 - name: Default ufw deny incoming
   become: true
-  ufw: state=enabled policy=deny direction=incoming
+  ansible.builtin.ufw: state=enabled policy=deny direction=incoming
 
 # ***
 
@@ -176,7 +176,7 @@
 
 - name: Ensure that netfilter-persistent will be enabled at boot
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: netfilter-persistent
     state: started
     enabled: yes

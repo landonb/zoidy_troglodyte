@@ -12,7 +12,7 @@
 #   ANSIBLE_DEBUG=0 ansible-playbook ~/.zoidy/site.yml -l localhost --tags zoidy_troglodyte-default -K
 
 - name: Load tasks dispatcher for ‘zoidy_troglodyte’
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: all
   tags:
@@ -29,7 +29,7 @@
 # ***
 
 - name: Wire PAM SSH intrusion detection
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: pam-sshd-overkill
     apply:
@@ -43,7 +43,7 @@
 # ***
 
 - name: Configure Unattended Installs
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: unattended-installs
     apply:

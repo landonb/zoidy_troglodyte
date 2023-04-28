@@ -5,7 +5,7 @@
 #  https://ryaneschinger.com/blog/securing-a-server-with-ansible/
 
 - name: Install opsec packages
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: install-packages-opsec
     apply:
@@ -16,7 +16,7 @@
     - zoidy_troglodyte-default
 
 - name: Disable unused packages
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: disable-unused-services
     apply:
@@ -29,7 +29,7 @@
 # ***
 
 - name: Configure firewall
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: setup-ufw-firewall
     apply:
@@ -40,7 +40,7 @@
     - zoidy_troglodyte-default
 
 - name: Configure logwatch
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: setup-log-watch
     apply:
@@ -53,7 +53,7 @@
   when: False
 
 - name: Disable Password Auth & Root SSH Login
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: ssh-harden-config
     apply:
@@ -66,7 +66,7 @@
 # ***
 
 - name: Install Latest gocryptfs release
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: cli-gocryptfs
     apply:
@@ -75,7 +75,7 @@
   tags: cli-gocryptfs
 
 - name: Let anyuser elevate ‘tomb’
-  include_role:
+  ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: update-sudoers-tomb
     apply:

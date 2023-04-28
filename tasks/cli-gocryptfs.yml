@@ -23,25 +23,25 @@
 # ***
 
 - name: Form latest gocryptfs release filename
-  set_fact:
+  ansible.builtin.set_fact:
     gocryptfs_release_name: "{{ gocryptfs_release_uri.stdout | basename }}"
 
 - name: Stat latest gocryptfs release archive
-  stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
+  ansible.builtin.stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
   register: gocryptfs_release_archive_f
 
 - name: Download latest gocryptfs release archive
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ gocryptfs_release_uri.stdout }}"
     dest: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
   when: not gocryptfs_release_archive_f.stat.exists
 
 - name: Stat latest gocryptfs release archive armored ASCII file
-  stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}.asc"
+  ansible.builtin.stat: path="{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}.asc"
   register: gocryptfs_release_archive_asc_f
 
 - name: Download latest gocryptfs release archive armored ASCII file
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ gocryptfs_release_uri.stdout }}.asc"
     dest: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}.asc"
   when: not gocryptfs_release_archive_asc_f.stat.exists
@@ -49,11 +49,11 @@
 # ***
 
 - name: Stat gocryptfs signing key
-  stat: path="{{ zoidy_homefries_downloads_dir }}/gocryptfs-signing-key.pub"
+  ansible.builtin.stat: path="{{ zoidy_homefries_downloads_dir }}/gocryptfs-signing-key.pub"
   register: gocryptfs_signing_key_f
 
 - name: Download gocryptfs signing key
-  get_url:
+  ansible.builtin.get_url:
     # https://nuetzlich.net/gocryptfs/releases/
     url: "https://nuetzlich.net/gocryptfs-signing-key.pub"
     dest: "{{ zoidy_homefries_downloads_dir }}/gocryptfs-signing-key.pub"
@@ -63,28 +63,28 @@
 #
 #   https://github.com/onaio/ansible-gpg-import
 - name: Import gocryptfs signing key
-  command: "gpg --import gocryptfs-signing-key.pub"
+  ansible.builtin.command: "gpg --import gocryptfs-signing-key.pub"
   args:
     chdir: "{{ zoidy_homefries_downloads_dir }}"
   when: not gocryptfs_signing_key_f.stat.exists
 
 # This'll fail on nonzero return code.
 - name: "Verify gocryptfs download"
-  command: "gpg --verify {{ gocryptfs_release_name }}.asc {{ gocryptfs_release_name }}"
+  ansible.builtin.command: "gpg --verify {{ gocryptfs_release_name }}.asc {{ gocryptfs_release_name }}"
   args:
     chdir: "{{ zoidy_homefries_downloads_dir }}"
 
 # ***
 
 - name: Ensure ~/.local/bin directory exists
-  file: path="{{ zoidy_homefries_user_local_bin_dir }}" state=directory
+  ansible.builtin.file: path="{{ zoidy_homefries_user_local_bin_dir }}" state=directory
   tags: always
 
 # Unpack the release. Essentially runs, e.g.,
 #   tar -xvzf gocryptfs_vXXX_linux-static_amd64.tar.gz -C ~/.local/bin
 # which copies the two files: gocryptfs, and gocryptfs.1.
 - name: Unarchive/Unpack gocryptfs executable
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
     dest: "{{ zoidy_homefries_user_local_bin_dir }}/"
     exclude:
@@ -95,11 +95,11 @@
 # ***
 
 - name: Ensure ~/.local/man/man1 directory exists
-  file: path="{{ zoidy_homefries_user_local_dir }}/man/man1" state=directory
+  ansible.builtin.file: path="{{ zoidy_homefries_user_local_dir }}/man/man1" state=directory
   tags: always
 
 - name: Unarchive/Unpack gocryptfs man page
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ zoidy_homefries_downloads_dir }}/{{ gocryptfs_release_name }}"
     dest: "{{ zoidy_homefries_user_local_dir }}/man/man1"
     exclude:
