@@ -8,23 +8,15 @@
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: install-packages-opsec
-    apply:
-      tags:
-        - install-packages-opsec
-  tags:
-    - install-packages-opsec
-    - zoidy_troglodyte-default
+    apply: { tags: always }
+  tags: install-packages-opsec
 
 - name: Disable unused packages
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: disable-unused-services
-    apply:
-      tags:
-        - disable-unused-services
-  tags:
-    - disable-unused-services
-    - zoidy_troglodyte-default
+    apply: { tags: always }
+  tags: disable-unused-services
 
 # ***
 
@@ -32,23 +24,15 @@
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: setup-ufw-firewall
-    apply:
-      tags:
-        - setup-ufw-firewall
-  tags:
-    - setup-ufw-firewall
-    - zoidy_troglodyte-default
+    apply: { tags: always }
+  tags: setup-ufw-firewall
 
 - name: Configure logwatch
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: setup-log-watch
-    apply:
-      tags:
-        - setup-log-watch
-  tags:
-    - setup-log-watch
-    - zoidy_troglodyte-default
+    apply: { tags: always }
+  tags: setup-log-watch
 # FIXME/2019-04-16: Emails are wired (to personal Gmail); now setup logwatch.
   when: False
 
@@ -56,12 +40,8 @@
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: ssh-harden-config
-    apply:
-      tags:
-        - ssh-harden-config
-  tags:
-    - ssh-harden-config
-    - zoidy_troglodyte-default
+    apply: { tags: always }
+  tags: ssh-harden-config
 
 # ***
 
@@ -69,17 +49,13 @@
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: cli-gocryptfs
-    apply:
-      tags:
-        - cli-gocryptfs
+    apply: { tags: always }
   tags: cli-gocryptfs
 
 - name: Let anyuser elevate ‘tomb’
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: update-sudoers-tomb
-    apply:
-      tags:
-        - update-sudoers-tomb
+    apply: { tags: always }
   tags: update-sudoers-tomb
 
