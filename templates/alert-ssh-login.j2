@@ -323,9 +323,28 @@ resolve_enemy_addy_from_pam_rhost () {
     nslookup "${PAM_RHOST}" | sed -E -e '/^Name:/,/^Address:/p' -e '/.*/d' | tail -1 | grep -Po ': \K.*'
   }
 
-  # - Set the ENEMY_ADDY aka PAM_RIPADDY IP address.
-  [ -n "${PAM_RHOST}" ] && ENEMY_ADDY="$(resolve_ip_nslookup)"
-  [ -n "${ENEMY_ADDY}" ] || ENEMY_ADDY='[unknown IP!]'
+  # Set the so-called ENEMY_ADDY aka remote connecting session's IP address.
+
+  # 2023-05-02: New behavior (to me), connecting IPv6 Wi-Fi host to IPv4 Wired
+  # host (that I only recently wired, which is why this is new to me):
+  # - PAM_RHOST is not set to internal host name (e.g., host.lan)
+  #   but PAM_RHOST is set to IPv4 addy of the wired connection.
+  #   - E.g., PAM_RHOST=192.168.11.234
+  #   - Furthermore, SSH_CONNECTION is unset.
+  # - Fortunately we can just check list of known-IPs to detect this case,
+  #   and set_alert_if_unknown_host_or_addy is already coded to ignore
+  #   [ $ENEMY_ADDY = $ENEMY_HOST ] which is what's gonna happen.
+  if [ -n "${PAM_RHOST}" ]; then
+    if element_in "${PAM_RHOST}" "${KNOWN_IPS[@]}"; then
+      ENEMY_ADDY="${PAM_RHOST}"
+    else
+      ENEMY_ADDY="$(resolve_ip_nslookup)"
+    fi
+  fi
+
+  if [ -z "${ENEMY_ADDY}" ]; then
+    ENEMY_ADDY='[unknown IP!]'
+  fi
 }
 
 # ***
@@ -503,6 +522,10 @@ EOF
 
 set_alert_if_unknown_host_or_addy () {
   # 2023-04-13: Over IPv6, PAM_RHOST is the same IPv6 as SSH_CONNECTION reports.
+  # 2023-05-02: Connecting IPv6 Wi-Fi to IPv4 Wired, PAM_RHOST is IPv4,
+  #             and SSH_CONNECTION is unset; and now both ENEMY_ADDY
+  #             and ENEMY_HOST are set to $PAM_RHOST. And host name
+  #             is something we'll never know, so don't alert on it.
   if [ "${ENEMY_HOST}" != "${ENEMY_ADDY}" ]; then
     if ! element_in "${ENEMY_HOST}" "${KNOWN_HOSTS[@]}"; then
       add_alert_reason "unlisted hostname"
