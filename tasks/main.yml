@@ -8,32 +8,10 @@
     - disable-unused-services
     - install-packages-opsec
     - setup-ufw-firewall
+    - pam-sshd-overkill
     - setup-log-watch
     - ssh-harden-config
     - cli-gocryptfs
+    - unattended-installs
     - update-sudoers-tomb
-
-# ***
-
-- name: Wire PAM SSH intrusion detection
-  ansible.builtin.include_role:
-    name: zoidy_troglodyte
-    tasks_from: pam-sshd-overkill
-    apply: { tags: always }
-  tags: pam-sshd-overkill
-  # This task is opt-in. (Using `when` test, not 'never' tag, supports
-  # site.yml role tag inheritence.)
-  when: "'pam-sshd-overkill' in ansible_run_tags"
-
-# ***
-
-- name: Configure Unattended Installs
-  ansible.builtin.include_role:
-    name: zoidy_troglodyte
-    tasks_from: unattended-installs
-    apply: { tags: always }
-  tags: unattended-installs
-  # This task is opt-in. (Using `when` test, not 'never' tag, supports
-  # site.yml role tag inheritence.)
-  when: "'unattended-installs' in ansible_run_tags"
 
