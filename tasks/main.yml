@@ -5,13 +5,13 @@
     name: zoidy_troglodyte
     tasks_from: all
   tags:
+    - cli-gocryptfs
     - disable-unused-services
     - install-packages-opsec
-    - setup-ufw-firewall
     - pam-sshd-overkill
     - setup-log-watch
+    - setup-ufw-firewall
     - ssh-harden-config
-    - cli-gocryptfs
     - unattended-installs
     - update-sudoers-tomb
 
