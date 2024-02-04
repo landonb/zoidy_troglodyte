@@ -4,6 +4,10 @@
 
 # Get the latest release.
 
+- name: 'Install jq (for next step)'
+  become: true
+  ansible.builtin.apt: name=jq
+
 # Download gocryptfs_vXXX_linux-static_amd64.tar.gz[.asc], as opposed
 # to e.g., gocryptfs_vXXX_src-deps.tar.gz[.asc],
 #       or gocryptfs_vXXX_src.tar.gz[.asc].
@@ -21,6 +25,9 @@
   register: gocryptfs_release_uri
 
 # ***
+
+- name: Ensure ~/.downloads directory exists
+  file: path={{ zoidy_homefries_downloads_dir }} state=directory
 
 - name: Form latest gocryptfs release filename
   ansible.builtin.set_fact:

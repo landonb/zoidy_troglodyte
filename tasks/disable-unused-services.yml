@@ -10,12 +10,16 @@
 #   - Stop nginx and/or apache services, as it's not like I use either one.
 # I'm opting for the last option -- disable services you do not use!
 
+# SAVVY/2024-02-04 15:24: Use ignore-errors. If this is the first playbook
+# you run (on latest Linux Mint 21.3), none of these services exists.
+
 - name: Disable Apache2 service
   become: true
   ansible.builtin.systemd:
     name: apache2
     state: stopped
     enabled: no
+  ignore_errors: true
 
 - name: Disable nginx service
   become: true
@@ -23,6 +27,7 @@
     name: nginx
     state: stopped
     enabled: no
+  ignore_errors: true
 
 # ***
 
@@ -32,6 +37,7 @@
     name: vsftpd
     state: stopped
     enabled: no
+  ignore_errors: true
 
 # ***
 
@@ -41,6 +47,7 @@
     name: rpcbind
     state: stopped
     enabled: no
+  ignore_errors: true
 
 # ***
 
@@ -51,4 +58,5 @@
     name: postgresql
     state: stopped
     enabled: no
+  ignore_errors: true
 
