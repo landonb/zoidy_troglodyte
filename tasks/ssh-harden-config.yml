@@ -26,19 +26,6 @@
     state: present
   notify: Restart sshd
 
-# FIXME/2023-04-19 15:07: This is untested, and I wonder if this should be
-# done when sshd is restarted on the managed node, i.e., move this task to
-# the "Restart sshd" handler.
-- name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
-  become: true
-  ansible.builtin.lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: "^Port\\s"
-    line: "Port {{ zoidy_troglodyte_ssh_port }}"
-    state: present
-  notify: Restart sshd
-  when: zoidy_troglodyte_ssh_port != 22
-
 - name: "Change control node's SSH remote port number — localhost:~/.ssh/config"
   delegate_to: localhost
   ansible.builtin.lineinfile:
@@ -47,6 +34,34 @@
     regexp: "\tPort\\s"
     line: "\tPort {{ zoidy_troglodyte_ssh_port }}"
     state: present
+  when: zoidy_troglodyte_ssh_port != 22
+
+# SAVVY: The play will fail after this step runs, and you'll need to
+# re-run the play with the new managed node port number.
+# - E.g., on the first zoidy_troglodyte run on a fresh machine, you'll
+#   run `ansible-playbook ... -e "ansible_port=22"`, then this step runs,
+#   Ansible fails, and you'll run `ansible-playbook ...` again, but without
+#   the port 22 change (so that Ansible uses the new, non-standard port
+#   number).
+# - BWARE/2024-02-04: I had issues today setting up a new machine, and
+#   had issues re-running the play after this step ran. So I swapped this
+#   step and the (now) previous step, and fixed a few other issues, and then
+#   the play ran to completion.
+#   - Hopefully, the next time this play runs on a new machine, it'll work
+#     smoothly — but I did not explicitly verify that'll be the case. So
+#     you still might have issues on the second run (if I didn't actually
+#     fix the real problem). (Though, it might have been that, when the
+#     local ~/.ssh/config change was *after* this step, that I needed to run
+#     `ansible-playbook ... -e "ansible_port={{ zoidy_troglodyte_ssh_port }}"`
+#     because Ansible was still using port 22.)
+- name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^Port\\s"
+    line: "Port {{ zoidy_troglodyte_ssh_port }}"
+    state: present
+  notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
 
 - name: Disallow X11 traffic forwarding
