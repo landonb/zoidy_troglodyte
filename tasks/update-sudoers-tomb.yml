@@ -10,6 +10,16 @@
 
 # ***
 
+- name: Add swapoff to sudoers, for less prompting when tombing
+  become: yes
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapoff"
+    line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapoff"
+    state: present
+
+# ***
+
 - name: Add e2label-show to sudoers, so travel.sh may identify specific tombs
   become: yes
   ansible.builtin.lineinfile:
