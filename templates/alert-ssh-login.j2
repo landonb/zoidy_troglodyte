@@ -89,7 +89,7 @@
 #      - CXREF:
 #        ~/.kit/ansible/roles/zoidy_apps_et_al/tasks/email-gmail-postfix.yml
 SEND_EMAIL_TO="{{ ansible_env.LOGNAME }}@$(hostname)"
-SEND_EMAIL_FROM="$(basename $0)@$(hostname)"
+SEND_EMAIL_FROM="$(basename -- "$0")@$(hostname)"
 
 # YOU: Specify list of known hostnames and IP addresses you trust.
 #      The script will ignore those events and not send alert emails
