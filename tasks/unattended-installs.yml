@@ -1,8 +1,32 @@
 ---
 
+# REFER:
+#
+#   systemctl list-timers
+#
+# E.g,
+#
+#   $ systemctl list-timers
+#
+#   ... # An approximation of the output:
+#   2024-03-21 16:46 11h left  2024-03-15 00:53 6d ago     update-notifier-motd.timer
+#   2024-03-22 00:04 18h left  2024-03-21 00:36 4h55m ago  mintupdate-automation-upgrade.timer
+#   2024-03-22 05:08 23h left  2024-03-21 05:08 22m ago    update-notifier-download.timer
+#   2024-03-25 00:22  3d left  2024-03-20 08:42 20h ago    mintupdate-automation-autoremove.timer
+
 # ***
 
 # mintupdate aka unattended-installs aka unattended-upgrades
+
+- name: Enable automatic Mint updates
+  become: yes
+  ansible.builtin.shell: mintupdate-automation upgrade enable
+
+# ALTLY/2024-03-21: Instead of the timer (or in addition to it,
+# hey why not, it won't hurt, but nor will it help), you could
+# use the included `mintupdate` cron job.
+# - This is included (and not simply deleted) mostly for
+#   illustrative purposes.
 
 # Place the same cron job that Update Manager places when you go to its
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
@@ -12,4 +36,6 @@
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
     mode: 0775
+  # ISOFF/2024-03-21: See note above. This is alt to timer.
+  when: False
 
