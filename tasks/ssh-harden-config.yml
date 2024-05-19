@@ -116,3 +116,23 @@
 #     state: present
 #   notify: Restart sshd
 
+# ***
+
+# CXREF: https://github.com/landonb/home-fries#🍟
+#   ~/.homefries/lib/term/show-command-name-in-window-title.sh
+#   ~/.homefries/lib/term/set-shell-prompt-and-window-title.sh
+# - This setting a tad out of place, or at least the file title of
+#   this task suggests we're "hardening" the config, but this doesn't
+#   do that. We're just piggy-backing on the one Zoidy Pooh Ansible
+#   task that edits sshd_config, so we can help out Homefries.
+- name: AcceptEnv ITERM_SESSION_ID so Homefries can number terminal window titles
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^AcceptEnv ITERM_SESSION_ID"
+    line: "AcceptEnv ITERM_SESSION_ID"
+    state: present
+  notify: Restart sshd
+
+# ***
+
