@@ -17,6 +17,7 @@
     - pass
 
     # tomb - crypto undertaker
+    # https://dyne.org/software/tomb
     - tomb
 
     # ufw - program for managing a Netfilter firewall
