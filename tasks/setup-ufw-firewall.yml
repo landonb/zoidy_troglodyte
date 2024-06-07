@@ -167,6 +167,17 @@
 
 # ***
 
+# BWARE/2024-06-06: If running over SSH, Ansible might fail on the
+# next command, more specifically fails once each on both loop items,
+# then stops the play.
+# - I'd guess because previous ufw change, but perhaps something
+#   else, difficult to tell, as the error basically says
+#   "Shared connection to localhost closed."
+# - Tho also says "SyntaxError: future feature annotations is not defined"
+#   and "MODULE FAILURE\nSee stdout/stderr for the exact error" so might
+#   be issue with a particular host (and I don't want to spend time
+#   diagnosing further, so stopping investigation at this comment).
+
 - name: Install packages to persist/save iptables/ip6tables firewall settings across boots
   become: true
   ansible.builtin.apt: name={{ item }}
