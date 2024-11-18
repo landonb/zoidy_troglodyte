@@ -10,13 +10,13 @@ zoidy_troglodyte_mosh_port_end: 60010
 zoidy_troglodyte_ssh_restrict_user: ''
 zoidy_troglodyte_ssh_restrict_macs: []
 
-# YOU: Override this to allowlist your specific hosts.
+# USAGE: Override this to allowlist your specific hosts.
 # - E.g.,:
 zoidy_troglodyte_pam_sshd_known_hosts:
   - localhost
   - "{{ ansible_hostname }}.lan"
 
-# YOU: Override this to allowlist your specific IPv4 and IPv6 addresses.
+# USAGE: Override this to allowlist your specific IPv4 and IPv6 addresses.
 # - E.g.,:
 zoidy_troglodyte_pam_sshd_known_ips:
   # For `ssh localhost`.
@@ -35,13 +35,13 @@ zoidy_troglodyte_pam_sshd_known_ips:
   # Private LAN IPv6 network.
   - fd12:3456:789a:0:*
 
-# YOU: Set this to the path of your message-of-the-day file,
+# USAGE: Set this to the path of your message-of-the-day file,
 # to override the default MOTD template (file).
 zoidy_troglodyte_pam_sshd_motd: ''
 
-# YOU: Specify hosts here whose kernel should not be auto-upgraded.
+# USAGE: Specify hosts here whose kernel should not be auto-upgraded.
 zoidy_troglodyte_unattended_hosts_skip_kernel: []
 
-# YOU: Specify other ports to allow through firewall.
+# USAGE: Specify other TCP ports to allow through firewall.
 zoidy_troglodyte_firewall_ports: []
 
