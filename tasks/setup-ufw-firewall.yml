@@ -101,7 +101,7 @@
 # ***
 
 # CXREF: See `man 8 iptables-extensions` for --dport/--destination-port docs.
-- name: Add ip6tables rules for user-specified service ports
+- name: Add ip6tables rules for user-specified TCP service ports
   ansible.builtin.shell: >
     /sbin/{{ item[0] }} \
       -A INPUT \
@@ -110,8 +110,8 @@
       -j ACCEPT
   become: yes
   notify: Persist iptables
-  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports) | list }}"
-  when: zoidy_troglodyte_firewall_ports | length > 0
+  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports_tcp) | list }}"
+  when: zoidy_troglodyte_firewall_ports_tcp | length > 0
 
 # E.g., sudo ufw allow <item>/tcp
 # - UTEST: E.g.,
@@ -123,15 +123,15 @@
 #     @testhost $ nc -l ${localip} 6443 -v
 #     # From another host
 #     @otherhost $ nc testhost 6443 -v
-- name: "Add ufw rules for user-specified service ports (if you've defined any)"
+- name: "Add ufw rules for user-specified TCP service ports (if you've defined any)"
   ansible.builtin.ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
   become: yes
   notify: Persist iptables
-  loop: "{{ zoidy_troglodyte_firewall_ports }}"
-  when: zoidy_troglodyte_firewall_ports | length > 0
+  loop: "{{ zoidy_troglodyte_firewall_ports_tcp }}"
+  when: zoidy_troglodyte_firewall_ports_tcp | length > 0
 
 # ***
 
