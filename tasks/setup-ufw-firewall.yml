@@ -113,6 +113,16 @@
   loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports) | list }}"
   when: zoidy_troglodyte_firewall_ports | length > 0
 
+# E.g., sudo ufw allow <item>/tcp
+# - UTEST: E.g.,
+#     [ "$(uname)" = "Linux" ] &&
+#       localip="$(ip route get 1 | head -1 | sed 's/ uid .*//' | awk '{ print $NF }')"
+#     [ "$(uname)" = "Darwin" ] &&
+#       localip="$(ipconfig getifaddr en0)"
+#     # From host you're configuring
+#     @testhost $ nc -l ${localip} 6443 -v
+#     # From another host
+#     @otherhost $ nc testhost 6443 -v
 - name: "Add ufw rules for user-specified service ports (if you've defined any)"
   ansible.builtin.ufw:
     rule: allow
