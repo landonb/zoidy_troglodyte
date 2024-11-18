@@ -43,5 +43,6 @@ zoidy_troglodyte_pam_sshd_motd: ''
 zoidy_troglodyte_unattended_hosts_skip_kernel: []
 
 # USAGE: Specify other TCP ports to allow through firewall.
+# - E.g., sudo ufw allow <port>/tcp
 zoidy_troglodyte_firewall_ports: []
 
