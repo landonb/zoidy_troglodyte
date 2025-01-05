@@ -118,9 +118,9 @@
 
 # ***
 
-# CXREF: https://github.com/landonb/home-fries#🍟
-#   ~/.homefries/lib/term/show-command-name-in-window-title.sh
-#   ~/.homefries/lib/term/set-shell-prompt-and-window-title.sh
+# CXREF: https://github.com/DepoXy/sh-humble-prompt#🙇
+#   ~/.kit/sh/sh-humble-prompt/lib/show-command-name-in-window-title.sh
+#   ~/.kit/sh/sh-humble-prompt/lib/set-shell-prompt-and-window-title.sh
 # - This setting a tad out of place, or at least the file title of
 #   this task suggests we're "hardening" the config, but this doesn't
 #   do that. We're just piggy-backing on the one Zoidy Pooh Ansible
