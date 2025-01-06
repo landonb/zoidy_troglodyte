@@ -83,7 +83,7 @@
     tasks_from: unattended-installs
     apply: { tags: always }
   tags: unattended-installs
-  # This task is opt-in. (Using `when` test, not 'never' tag, supports
-  # site.yml role tag inheritence.)
+  # This task is opt-in. (Note we use `when` test, not `tags: never`,
+  # to support site.yml role tag inheritence.)
   when: "'unattended-installs' in ansible_run_tags"
 
