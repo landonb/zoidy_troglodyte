@@ -20,6 +20,7 @@
 
 - name: Enable automatic Mint updates
   become: yes
+  when: ansible_facts['distribution'] == 'Linux Mint'
   ansible.builtin.shell: mintupdate-automation upgrade enable
 
 # ALTLY/2024-03-21: Instead of the timer (or in addition to it,
@@ -32,10 +33,57 @@
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
   become: yes
+  when: ansible_facts['distribution'] == 'Linux Mint'
   ansible.builtin.copy:
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
     mode: 0775
   # ISOFF/2024-03-21: See note above. This is alt to timer.
   when: False
+
+# ***
+
+# REFER:
+# https://wiki.debian.org/UnattendedUpgrades              <-- Useful
+#   https://packages.debian.org/source/bookworm/unattended-upgrades
+#     https://packages.debian.org/bookworm/unattended-upgrades
+#       https://github.com/mvo5/unattended-upgrades       <-- Useful
+#   https://packages.debian.org/bookworm/apt-listchanges
+#     https://packages.debian.org/source/bookworm/apt-listchanges
+#       https://salsa.debian.org/debian/apt-listchanges
+
+- name: Install unattended-upgrades and apt-listchanges packages
+  become: yes
+  when: ansible_facts['distribution'] == 'Debian'
+  ansible.builtin.apt: name={{ item }}
+  loop:
+    - unattended-upgrades
+    - apt-listchanges
+
+# INERT/2025-01-05: We'll leave 'unattended-upgrades' disabled for now.
+# - I'm not sure we should enable it.
+# - HSTRY: I've just it for years on Linux Mint, although I *rarely*
+#   rebooted, so at least kernel updates didn't get applied often,
+#   even though they'd be installed.
+#   - The main risk is workstation disruption, i.e., if an update
+#     fails, or if a newer software version fails, what you wanted
+#     to work might be disrupted.
+#   - Author has only ever had one issue, and it was in `tree` of
+#     all things (which is used by Password Store `pass` command).
+#     - I also found the issue because macOS Homebrew automatic
+#       updates, so not an aptitude-related issue, but related to
+#       automatic software updating in general.
+#     - And though it interrupted my work for a bit, it also encouraged
+#       me to submit a PR to `tree`, and now my name in the changelog!
+#       - So there's the risk that an automatic update disrupts your
+#         work — but there's also a possible reward (if you see it
+#         this way) that you could submit a patch so some widely-used
+#         utility, too.
+# - INERT: In any case, we'll install the 2 libraries you'd need, one
+#   to run unattended-upgrades, and another you could use to email a
+#   list of changes applied by an upgrade.
+#   - MAYBE: In the least, I'm curious about automating an email to
+#     let me know when it's time to upgrade packages. Because lately
+#     I only logon my Linux hosts over SSH, and my SSH logon message
+#     doesn't tell me when there are updates available.
 
