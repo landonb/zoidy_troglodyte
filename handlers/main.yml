@@ -1,10 +1,5 @@
 ---
 
-# I.e., sudo systemctl restart ssh
-- name: Restart sshd
-  become: yes
-  service: name=sshd state=restarted
-
 - name: Persist iptables
   become: yes
   # Note: This creates /etc/iptables/rules.v4|v6
@@ -15,4 +10,23 @@
   # against 'save' state anymore, as far as I've seen).
   #   args:
   #     warn: False
+
+# ***
+
+# BWARE/2025-01-05: Keep SSH Restart at the bottom of this file, so it runs *last*
+#
+# - DUNNO/2025-01-05: I've seen in past that `Persist iptables` fails if
+#   run after restarting SSH (if SSH port number was changed).
+#   - But for some reason, I don't see that happening today (on Debian 12;
+#     albeit last time I saw the issue was on Linut Mint 21.3).
+#
+# - SAVVY: In any case, call SSH restart last in case port number changes.
+#   - Otherwise, some other call might fail because original ansible-playbook
+#     call specifies a port number that's since been changed.
+#   - And if you `-vvv` the play, you'll this is the last SSH call that's made.
+
+# I.e., sudo systemctl restart ssh
+- name: Restart sshd
+  become: yes
+  service: name=sshd state=restarted
 

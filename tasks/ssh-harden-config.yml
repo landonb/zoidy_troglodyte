@@ -36,24 +36,16 @@
     state: present
   when: zoidy_troglodyte_ssh_port != 22
 
-# SAVVY: The play will fail after this step runs, and you'll need to
-# re-run the play with the new managed node port number.
-# - E.g., on the first zoidy_troglodyte run on a fresh machine, you'll
-#   run `ansible-playbook ... -e "ansible_port=22"`, then this step runs,
-#   Ansible fails, and you'll run `ansible-playbook ...` again, but without
-#   the port 22 change (so that Ansible uses the new, non-standard port
-#   number).
-# - BWARE/2024-02-04: I had issues today setting up a new machine, and
-#   had issues re-running the play after this step ran. So I swapped this
-#   step and the (now) previous step, and fixed a few other issues, and then
-#   the play ran to completion.
-#   - Hopefully, the next time this play runs on a new machine, it'll work
-#     smoothly — but I did not explicitly verify that'll be the case. So
-#     you still might have issues on the second run (if I didn't actually
-#     fix the real problem). (Though, it might have been that, when the
-#     local ~/.ssh/config change was *after* this step, that I needed to run
-#     `ansible-playbook ... -e "ansible_port={{ zoidy_troglodyte_ssh_port }}"`
-#     because Ansible was still using port 22.)
+# HSTRY/2025-01-05: The play used to (or least sometimes would) fail after this step.
+# - But this has not been observed recently.
+# - And the `Restart sshd` should run at the end of the play.
+#   - So I'm confused how this used to fail.
+#     (Also the @managed /etc/ssh/sshd_config change used to be before
+#      the @control ~/.ssh/config change, but how would that matter.)
+# - In any case, for the first run on a fresh machine, you'd run, e.g.,:
+#     ansible-playbook ... --tags zoidy_troglodyte -K -e "ansible_port=22"
+# - And if you need to run it again, you'll rely on zoidy_troglodyte_ssh_port:
+#     ansible-playbook ... --tags zoidy_troglodyte -K
 - name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
   become: true
   ansible.builtin.lineinfile:
