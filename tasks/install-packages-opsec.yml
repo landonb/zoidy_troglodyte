@@ -27,10 +27,21 @@
     # ufw - program for managing a Netfilter firewall
     - ufw
 
+# Author used these tools circa 2019 while developing an encrypted
+# thumb drive backup solution, but I haven't used these since then.
+- name: 'Install development packages'
+  become: true
+  ansible.builtin.apt: name={{ item }}
+  loop:
+
     # binwalk - tool library for analyzing binary blobs and executable code
     - binwalk
+
     # foremost - forensic program to recover lost files
     - foremost
+
     # pgpdump - PGP packet visualizer
     - pgpdump
+
+  when: zoidy_troglodyte_include_dev_packages
 
