@@ -17,6 +17,12 @@
   ansible.builtin.apt: name={{ item }}
   loop:
 
+    # expect - automates interactive applications
+    # - Used by `321open` to automate `ssh-add` using
+    #   passphrases read from Password Store.
+    #     https://github.com/DepoXy/321open#👐
+    - expect
+
     # pass - lightweight directory-based password manager
     - pass
 
