@@ -1,4 +1,9 @@
+# vim:tw=0:ts=2:sw=2:et:norl:ft=yaml.ansible
+# Author: Landon Bouma <https://tallybark.com/>
+# Project: https://github.com/landonb/zoidy_troglodyte#🧔
+# License: GPLv3
 ---
+
 language: python
 python: "2.7"
 

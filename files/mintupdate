@@ -1,3 +1,7 @@
 #!/bin/bash
+# vim:tw=0:ts=2:sw=2:et:norl:ft=bash
+# Author: Landon Bouma <https://tallybark.com/>
+# Project: https://github.com/landonb/zoidy_troglodyte#🧔
+# License: GPLv3
 
 /usr/bin/mintupdate-cli upgrade --refresh-cache --yes > /var/log/mintupdate.log 2>&1
