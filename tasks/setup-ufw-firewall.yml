@@ -33,7 +33,7 @@
 # E.g.,
 #   sudo iptables -P INPUT ACCEPT
 # Or:
-#   sudo ufw default accept incoming
+#   sudo ufw default allow incoming
 - name: Allow all incoming traffic ufw
   become: true
   ansible.builtin.ufw: state=enabled policy=allow direction=incoming
