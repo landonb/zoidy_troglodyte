@@ -33,6 +33,10 @@
     # ufw - program for managing a Netfilter firewall
     - ufw
 
+    # fd - Used by author's `321open` ssh-add wrapper
+    # https://github.com/DepoXy/321open#👐
+    - fd-find
+
 # Author used these tools circa 2019 while developing an encrypted
 # thumb drive backup solution, but I haven't used these since then.
 - name: 'Install development packages'
