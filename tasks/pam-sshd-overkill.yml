@@ -43,8 +43,10 @@
   ansible.builtin.lineinfile:
     path: /etc/pam.d/sshd
     line: 'session optional pam_mail.so quiet noenv # [1]'
-    # (lb): I'd swear on one machine this was 'standard', and on another,
-    # it was 'quiet' already'. So use `([^ ]+)` to match either.
+    # REFER/2025-09-12: Debian 13 supplied the following line:
+    #   session    optional     pam_mail.so standard noenv # [1]
+    # SAVVY: Our regex uses `([^ ]+)` which matches either 'standard'
+    # or 'quiet' (or any WORD).
     regexp: '^session +optional +pam_mail.so ([^ ]+) noenv # \[1\]$'
 
 # Display unauthorized usage warning. Really just a legal liability,
