@@ -125,8 +125,15 @@
   become: true
   ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
-    regexp: "^AcceptEnv ITERM_SESSION_ID"
-    line: "AcceptEnv ITERM_SESSION_ID"
+    # REFER/2025-09-12: Debian 13 supplied the following line:
+    #   AcceptEnv LANG LC_* COLORTERM NO_COLOR
+    # SPIKE/DUNNO: Does config file support more than one ^AcceptEnv line?
+    # - HSTRY: Old approach creates second AccepEnv line:
+    #     regexp: "^AcceptEnv ITERM_SESSION_ID"
+    #     line: "AcceptEnv ITERM_SESSION_ID"
+    #   - Nowadays we replace existing AcceptEnv line.
+    regexp: "^AcceptEnv "
+    line: "AcceptEnv LANG LC_* COLORTERM NO_COLOR ITERM_SESSION_ID"
     state: present
   notify: Restart sshd
 
