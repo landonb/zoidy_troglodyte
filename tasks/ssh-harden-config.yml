@@ -125,7 +125,8 @@
   become: true
   ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
-    # REFER/2025-09-12: Debian 13 supplied the following line:
+    # REFER/2025-09-12: Debian 13 adds these 2 lines (not found in Linux Mint):
+    #   # Allow client to pass locale and color environment variables
     #   AcceptEnv LANG LC_* COLORTERM NO_COLOR
     # SPIKE/DUNNO: Does config file support more than one ^AcceptEnv line?
     # - HSTRY: Old approach creates second AccepEnv line:

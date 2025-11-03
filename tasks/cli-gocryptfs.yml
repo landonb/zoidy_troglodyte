@@ -6,7 +6,12 @@
 
 # gocryptfs
 
-# Get the latest release.
+# REFER:
+# https://github.com/rfjakob/gocryptfs/
+
+# CALSO: You'll find gocryptfs published via APT nowadays, too.
+
+# *** Get the latest gocryptfs release.
 
 - name: 'Install jq (for next step)'
   become: true

@@ -4,6 +4,8 @@
 # License: GPLv3
 ---
 
+# LOPRI/2025-11-02: Verify this task on Debian >=13.
+
 # (lb): Both apache2 and nginx are installed by Linux Minut 19, and they'll
 # both compete for port 80, and on my machine, nginx seems to always wins.
 # - We could resolve this situation in a few different ways:
