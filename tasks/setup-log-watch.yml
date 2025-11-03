@@ -4,6 +4,8 @@
 # License: GPLv3
 ---
 
+# ISOFF/2018-12-16: Not called from all.yml.
+
 - name: Set up Postfix to relay mail
   become: true
   ansible.builtin.debconf:
