@@ -408,7 +408,8 @@ EOF
   # - To avoid the problem, start the Bash array lookup with a {{ 'literal' }},
   #   e.g., `{{ '${#' }} KNOWN_HOSTS[@]}`, or make the whole thing a literal.
   #     https://jinja.palletsprojects.com/en/3.0.x/templates/#escaping
-  for (( idx = 0; idx < {{ '${#KNOWN_HOSTS[@]}' }}; idx++ )); do  # BREADCRUMB: Bash for loop syntax.
+  # CRUMB: Bash for loop syntax.
+  for (( idx = 0; idx < {{ '${#KNOWN_HOSTS[@]}' }}; idx++ )); do
     echo "KNOWN_HOSTS[$idx]=${KNOWN_HOSTS[$idx]}"
   done
 
