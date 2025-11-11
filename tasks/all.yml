@@ -49,6 +49,12 @@
 
 # ***
 
+# PROOF:
+#
+# - name: Display ansible_run_tags
+#   debug:
+#     msg: "ansible_run_tags: {{ ansible_run_tags }}"
+
 - name: Install Latest gocryptfs release
   ansible.builtin.include_role:
     name: zoidy_troglodyte
