@@ -38,7 +38,7 @@
     apply: { tags: always }
   tags: setup-log-watch
 # FIXME/2019-04-16: Emails are wired (to personal Gmail); now setup logwatch.
-  when: False
+  when: false
 
 - name: Disable Password Auth & Root SSH Login
   ansible.builtin.include_role:
@@ -86,4 +86,3 @@
   # This task is opt-in. (Note we use `when` test, not `tags: never`,
   # to support site.yml role tag inheritence.)
   when: "'unattended-installs' in ansible_run_tags"
-

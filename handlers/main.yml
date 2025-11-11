@@ -5,7 +5,7 @@
 ---
 
 - name: Persist iptables
-  become: yes
+  become: true
   # Note: This creates /etc/iptables/rules.v4|v6
   command: service netfilter-persistent save
   # 2023-04-14: An older shell (pre ansible.builtin.shell?) warned to
@@ -31,6 +31,5 @@
 
 # I.e., sudo systemctl restart ssh
 - name: Restart sshd
-  become: yes
+  become: true
   service: name=sshd state=restarted
-
