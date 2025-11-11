@@ -57,6 +57,8 @@
     regexp: "^Port\\s"
     line: "Port {{ zoidy_troglodyte_ssh_port }}"
     state: present
+  # The service doesn't restart immediately,
+  # or at all if the playbook fails.
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
 
