@@ -4,6 +4,11 @@
 # License: GPLv3
 ---
 
+# ISOFF/2025-11-11: Install from APT instead.
+# - Also, BROKN: Task "Verify gocryptfs download" below
+#   fails because missing public key, and I don't want
+#   to spend time figuring out which key is missing.
+
 # gocryptfs
 
 # REFER:
@@ -87,6 +92,11 @@
     chdir: "{{ zoidy_homefries_downloads_dir }}"
   when: not gocryptfs_signing_key_f.stat.exists
 
+# FIXME: /2025-11-11: Fails on fresh install:
+#   gpg: Can't check signature: No public key
+#
+# - INERT: But we can install from APT and avoid this tech debt.
+#
 # This'll fail on nonzero return code.
 - name: "Verify gocryptfs download"
   ansible.builtin.command: "gpg --verify {{ gocryptfs_release_name }}.asc {{ gocryptfs_release_name }}"

@@ -55,12 +55,18 @@
 #   debug:
 #     msg: "ansible_run_tags: {{ ansible_run_tags }}"
 
+# ISOFF/2025-11-11: Install gocryptfs from APT
+# so we don't have to maintain to GH installer.
+# - So this task is now opt-in.
 - name: Install Latest gocryptfs release
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: cli-gocryptfs
     apply: { tags: always }
   tags: cli-gocryptfs
+  # This task is opt-in. (Note we use `when` test, not `tags: never`,
+  # to support site.yml role tag inheritence.)
+  when: "'cli-gocryptfs' in ansible_run_tags"
 
 - name: Let anyuser elevate ‘tomb’
   ansible.builtin.include_role:

@@ -41,6 +41,11 @@
     # https://github.com/DepoXy/321open#👐
     - fd-find
 
+    # gocryptfs
+    # HSTRY/2025-11-11: We used to install from GH release,
+    # but nowadays APT has a fairly recent build.
+    - gocryptfs
+
 # Author used these tools circa 2019 while developing an encrypted
 # thumb drive backup solution, but I haven't used these since then.
 - name: 'Install development packages'
