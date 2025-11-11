@@ -58,6 +58,17 @@
     apply: { tags: always }
   tags: grub-initramfs-zswap
 
+# ***
+
+- name: Relocate ~/.sudo_as_admin_successful
+  ansible.builtin.include_role:
+    name: zoidy_troglodyte
+    tasks_from: update-sudoers-admin-flag
+    apply: { tags: always }
+  tags: update-sudoers-admin-flag
+
+# ***
+
 # PROOF:
 #
 # - name: Display ansible_run_tags

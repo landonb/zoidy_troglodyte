@@ -18,4 +18,5 @@
     - setup-ufw-firewall
     - ssh-harden-config
     - unattended-installs
+    - update-sudoers-admin-flag
     - update-sudoers-tomb

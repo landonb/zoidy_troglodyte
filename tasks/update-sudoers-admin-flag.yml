@@ -1,0 +1,49 @@
+# vim:tw=0:ts=2:sw=2:et:norl:ft=yaml.ansible
+# Author: Landon Bouma <https://tallybark.com/>
+# Project: https://github.com/landonb/zoidy_troglodyte#🧔
+# License: GPLv3
+---
+
+# SAVVY: Relocate ~/.sudo_as_admin_successful under ~/.local/state.
+# - This is purely cosmetic!
+# - The ~/.sudo_as_admin_successful touchfile (it's empty), when absent,
+#   supposedly triggers a message on user's first sudo, e.g.:
+#     To run a command as administrator (user "root"), use "sudo <command>".
+#     See "man sudo_root" for details.
+#   - Although I don't see that message.
+# - Author sees this behavior:
+#   - When ~/.sudo_as_admin_successful exists:
+#       user@host:~$ sudo su -
+#       root@host:/home/user# █
+#   - When ~/.sudo_as_admin_successful absent:
+#       user@host:~$ sudo su -
+#       root@host:~#
+#     - I.e., PS1 uses ~, not /home/user.
+#     - Also, `sudo` creates ~/.sudo_as_admin_successful.
+# - THANX: Apparently it's now possible to disable or relocate said file:
+#     https://github.com/sudo-project/sudo/issues/56
+#   - BEGET:
+#     https://askubuntu.com/questions/813942/
+#       is-it-possible-to-stop-sudo-as-admin-successful-being-created
+#     https://www.google.com/search?q=sudo_as_admin_successful
+# - REFER: `man sudoers` re: `admin_flag`, which creates ~/.sudo_as_admin_successful:
+#     admin_flag
+#       The admin_flag option specifies the path to a file that is created
+#       the first time a user that is a member of the sudo or admin groups runs sudo.
+#       Only available if sudo is configured with the --enable-admin-flag option.
+#       The default value is ~/.sudo_as_admin_successful.
+
+- name: Add admin_flags to sudoers, to relocate ~/.sudo_as_admin_successful
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    regexp: "^Defaults\\s\\+admin_flag="
+    line: "Defaults\tadmin_flag=\"~/.local/state/.sudo_as_admin_successful\""
+    state: present
+
+- name: Remove ~/.sudo_as_admin_successful
+  ansible.builtin.file:
+    path: ~/.sudo_as_admin_successful
+    state: absent
+
+# ***
