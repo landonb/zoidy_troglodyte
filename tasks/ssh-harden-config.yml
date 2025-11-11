@@ -4,6 +4,90 @@
 # License: GPLv3
 ---
 
+# DEVEL: Test just this config using DepoXy zoidy-play alias:
+#
+# - After fresh install, before managed node's SSH port is changed,
+#   use a somewhat kludgy call to use the default SSH port number,
+#   and not zoidy_troglodyte_ssh_port:
+#
+#   zoidy-play -l ${_managed:-host} --tags ssh-harden-config -K \
+#     -e "zoidy_ansible_port=22" --ssh-extra-args "-p 22"
+#
+# - Once the managed node is updated (after this script runs),
+#   you can drop those two key-values, e.g.:
+#
+#   zoidy-play -l ${_managed:-host} --tags ssh-harden-config -K
+#
+# ***
+#
+# BWARE: This script used to use EXTRA_VARS, e.g.,
+#
+#   zoidy-play -l ${_managed:-thea} --tags ssh-harden-config -K -e "ansible_port=22"
+#
+# - But EXTRA_VARS is immutable, i.e., you cannot set_fact it
+#   (this task silently fails):
+#
+#     - ansible.builtin.set_fact:
+#       ansible_port: "{{ zoidy_troglodyte_ssh_port }}"
+#
+#   - REFER: Note that EXTRA_VARS also has highest precedence.
+#     https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence
+#
+# - Nor can you override an ansible_port EXTRA_VARS for a task, e.g.,
+#   a task like this still uses the value from `-e ansible_port`:
+#
+#     - ansible.builtin.lineinfile:
+#       ...
+#       vars: { 'ansible_ssh_extra_args': "-p {{ zoidy_troglodyte_ssh_port }}" }
+#
+# - Fortunately, instead of `-e ansible_port` when can use
+#   `--ssh-extra-args` instead, which is overrideable via
+#   `vars:` for any individual task.
+#
+#   - SAVVY: Not that when `-e ansible_port` is omitted,
+#     that variable *is not set*.
+#
+#   - HSTRY: I had tried an alternative approach using
+#     an intermediate var., e.g., `-e zoidy_ansible_port`,
+#     but there's no way (AFAIK) to call set_fact early
+#     enough, e.g.,
+#
+#       $ ansible-playbook -e zoidy_ansible_port=22 ...
+#
+#     fails on the second task, which I think is a built-in
+#     task that runs before any of our tasks (though the first
+#     task (the "PLAY" task below) is our "task", but that's
+#     a site.yml task, and we cannot set_fact therein), e.g.:
+#
+#       $ ansible-playbook -e zoidy_ansible_port=22 -K ...
+#       BECOME password:
+#        ________________________________________________
+#       < PLAY [apply common configuration to all nodes] >
+#        ------------------------------------------------
+#       ...
+#        ________________________
+#       < TASK [Gathering Facts] >
+#        ------------------------
+#       ...
+#       Monday 10 November 2025  23:09:52 -0600 (0:00:00.121)       0:00:00.121 *******
+#       fatal: [host]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to
+#       the host via ssh: ssh: connect to host 192.168.1.123 port 34567: Connection
+#       refused", "unreachable": true}
+#
+#     Where I had wanted to set ansible_port before other
+#     tasks, e.g.:
+#
+#       - name: Set SSH port to EXTRA_VARS value
+#         ansible.builtin.set_fact:
+#           ansible_port: "{{ zoidy_ansible_port }}"
+#
+#     - Fortunately, the --ssh-extra-args approach documented above
+#       (so far seems) to work well:
+#
+#         ansible-playbook ... -e "zoidy_ansible_port=22" --ssh-extra-args "-p 22"
+
+# ***
+
 - name: Disallow password authentication
   become: true
   ansible.builtin.lineinfile:
@@ -30,15 +114,7 @@
     state: present
   notify: Restart sshd
 
-- name: "Change control node's SSH remote port number — localhost:~/.ssh/config"
-  delegate_to: localhost
-  ansible.builtin.lineinfile:
-    dest: ~/.ssh/config
-    insertafter: "^Host {{ ansible_hostname }}$"
-    regexp: "\tPort\\s"
-    line: "\tPort {{ zoidy_troglodyte_ssh_port }}"
-    state: present
-  when: zoidy_troglodyte_ssh_port != 22
+# ***
 
 # HSTRY/2025-01-05: The play used to (or least sometimes would) fail after this step.
 # - But this has not been observed recently.
@@ -47,7 +123,7 @@
 #     (Also the @managed /etc/ssh/sshd_config change used to be before
 #      the @control ~/.ssh/config change, but how would that matter.)
 # - In any case, for the first run on a fresh machine, you'd run, e.g.,:
-#     ansible-playbook ... --tags zoidy_troglodyte -K -e "ansible_port=22"
+#     ansible-playbook ... --tags zoidy_troglodyte -K -e "zoidy_ansible_port=22" --ssh-extra-args "-p 22"
 # - And if you need to run it again, you'll rely on zoidy_troglodyte_ssh_port:
 #     ansible-playbook ... --tags zoidy_troglodyte -K
 - name: "Change managed node's SSH server port number — {{ ansible_hostname }}:/etc/ssh/sshd_config"
@@ -61,6 +137,121 @@
   # or at all if the playbook fails.
   notify: Restart sshd
   when: zoidy_troglodyte_ssh_port != 22
+
+# ***
+
+# Here's a complicated mess just to change localhost's
+# ~/.ssh/config port number for the managed host.
+# - Note that 'ignore_errors: true' *does not work*
+#   if the SSH connection itself fails — it only
+#   ignores errors from the action being run (e.g.,
+#   ansible.builtin.command).
+# - As such, we try to run an SSH command from the
+#   managed node *back* to the control node, and we
+#   use ansible.builtin.command so that we can use
+#   ignore_errors and not fail the play.
+# - The result of the SSH command lets us pick the
+#   SSH port to use to connect to localhost, which
+#   is likely zoidy_troglodyte_ssh_port, but if the
+#   user runs Ansible using the default port number for
+#   a fresh install, i.e., `--ssh-extra-args "-p 22"`,
+#   we need to change the SSH port number for the
+#   localhost command.
+#   - Complicated, isn't it! =)
+#   - Also silly, all just to obfuscate the SSH port
+#     number...
+
+# Connect to localhost and change default SSH port to @managed node.
+# - Note this fails if the port is incorrect, e.g.,
+#   fatal: [thea -> localhost]: UNREACHABLE! => {"changed": false, "msg":
+#     "Failed to connect to the host via ssh: ssh: connect to host localhost port 22: Connection refused",
+#     "unreachable": true}
+# but ignore_errors doesn't work here, e.g.,:
+#     ansible.builtin.lineinfile:
+#     ...
+#     ignore_errors: true
+# likely because ignore_errors only applies to module result (e.g.,
+# whether lineinfile works or not), and not if Ansible cannot connect.
+#
+# So here we suss the current port number to the localhost.
+
+- name: Check local SSH port is zoidy_ansible_port (extra_vars) or to zoidy_troglodyte_ssh_port (vars)
+  ansible.builtin.set_fact:
+    zoidy_ansible_port: "{{ (zoidy_ansible_port is defined and zoidy_ansible_port) or zoidy_troglodyte_ssh_port }}"
+
+- name: Show zoidy_ansible_port
+  debug:
+    msg: "zoidy_ansible_port = {{ zoidy_ansible_port }}"
+
+# BWARE: Ansible will hang when SSH'ing from managed node back to control node
+# unless ~/.ssh/known_hosts contains the managed node's key, e.g.
+#   $ ssh user@host -p 34567 'echo success'
+#   The authenticity of host '[host]:34567 ([1234:5678:90a::bcd]:34567)' can't be established.
+#   ...
+# - Which we avoid using `ssh -o StrictHostKeyChecking`.
+# - Note there's also ansible.builtin.known_hosts, but that seems more
+#   complicated to wire, e.g.:
+#
+#     - name: "Add control node to managed node's ~/.ssh/known_hosts"
+#       ansible.builtin.known_hosts:
+#         name: '[ip4-ip6-or-host]:22'
+#         key: '[ip4-ip6-or-host]:22 ssh-rsa XXXXXXXXXXXXXX/X+XXXXXXXXXXXXXX+XXXXX/XXXXX'
+#         path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+#         state: present
+
+- name: "Verify control host port is {{ zoidy_ansible_port }} or not"
+  # DUNNO/2025-11-10: This fails if run from localhost and port is incorrect
+  # ("Connection refused"), regardless of ignore_errors being true, e.g.:
+  #   delegate_to: localhost
+  #   ansible.builtin.command: "ssh {{ ansible_env.LOGNAME }}@localhost -p {{ ansible_port }} 'echo success'"
+  # CALSO: There's also local_action (which author has never used, but
+  # seems to work here, albeit it's not ansible.builtin.local_action),
+  # but it suffers the same fate as the previous example, e.g.:
+  #   local_action: "shell ssh {{ ansible_env.LOGNAME }}@localhost -p {{ zoidy_ansible_port }} 'echo success'"
+  ansible.builtin.command: "ssh -o StrictHostKeyChecking=no {{
+      lookup('ansible.builtin.env', 'LOGNAME')
+    }}@{{
+      lookup('ansible.builtin.pipe', 'hostname')
+    }} -p {{ zoidy_ansible_port }} 'echo success'"
+  # env:
+  #   ANSIBLE_HOST_KEY_CHECKING: false
+  register: ssh_localhost_port_matches
+  ignore_errors: true
+
+# # OUTPUTs: "", or "success".
+# - debug: msg="ssh_localhost_port_matches.stdout -- {{ ssh_localhost_port_matches.stdout }}"
+
+- name: "Change control node's SSH remote port number — localhost:~/.ssh/config -p {{ zoidy_ansible_port }}"
+  delegate_to: localhost
+  ansible.builtin.lineinfile:
+    dest: ~/.ssh/config
+    insertafter: "^Host {{ ansible_hostname }}$"
+    firstmatch: true
+    regexp: "\tPort\\s"
+    line: "\tPort {{ zoidy_troglodyte_ssh_port }}"
+    state: present
+  when: ssh_localhost_port_matches.stdout.find("success") != -1
+
+- name: "Change control node's SSH remote port number — localhost:~/.ssh/config -p {{ zoidy_troglodyte_ssh_port }}"
+  delegate_to: localhost
+  ansible.builtin.lineinfile:
+    dest: ~/.ssh/config
+    insertafter: "^Host {{ ansible_hostname }}$"
+    firstmatch: true
+    regexp: "\tPort\\s"
+    line: "\tPort {{ zoidy_troglodyte_ssh_port }}"
+    state: present
+  # NOICE! And only took me freaking hours to figure out...
+  # - SAVVY: Don't `-e ansible_port=22`, but `--ssh-extra-args "-p 22"`
+  #   instead, because you cannot change ansible_port at runtime (i.e.,
+  #   it applies to every task, immutable, for the entire play, AFAIK).
+  # - I also tried setting ansible_port, to no avail:
+  #     environment:
+  #       ansible_port: "{{ zoidy_troglodyte_ssh_port }}"
+  vars: { 'ansible_ssh_extra_args': "-p {{ zoidy_troglodyte_ssh_port }}" }
+  when: ssh_localhost_port_matches.stdout.find("success") == -1
+
+# ***
 
 - name: Disallow X11 traffic forwarding
   become: true
