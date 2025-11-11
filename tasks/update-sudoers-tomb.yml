@@ -31,3 +31,5 @@
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     state: present
+
+# ***
