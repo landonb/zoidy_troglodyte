@@ -4,16 +4,26 @@
 # License: GPLv3
 ---
 
+  # SAVVY: This creates /etc/iptables/rules.v4|v6
+  # - HSTRY/2025-11-11: Previous a command:
+  #     ansible.builtin.command: service netfilter-persistent save
+  #   But then Ansible Lint complains:
+  #     "service used in place of service module"
+  #   Though I'm not sure how to use service module to "save";
+  #   but I did find iptables_state module (and fortunately
+  #   we can use a with_items loop to update both ipv4 and
+  #   ipv6, because I don't think you can wire more than
+  #   one 'notify' handler).
 - name: Persist iptables
   become: true
-  # Note: This creates /etc/iptables/rules.v4|v6
-  command: service netfilter-persistent save
-  # 2023-04-14: An older shell (pre ansible.builtin.shell?) warned to
-  # tell us that 'save' is not a valid (Ansible) service module state.
-  # But latest Ansible does not have 'warn' option (nor does it warn
-  # against 'save' state anymore, as far as I've seen).
-  #   args:
-  #     warn: False
+  community.general.iptables_state:
+    ip_version: "ip{{ item }}"
+    table: filter
+    state: saved
+    path: "/etc/iptables/rules.{{ item }}"
+  with_items:
+    - v4
+    - v6
 
 # ***
 
