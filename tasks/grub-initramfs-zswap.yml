@@ -1,0 +1,223 @@
+# vim:tw=0:ts=2:sw=2:et:norl:ft=yaml.ansible
+# Author: Landon Bouma <https://tallybark.com/>
+# Project: https://github.com/landonb/zoidy_troglodyte#🧔
+# License: GPLv3
+---
+
+# ***
+
+# SAVVY/2025-11-10: The first two steps (lz4 and lz4_compress) are
+# possibly not necessary, or at least most online I help I saw omit
+# them, and only show zsmalloc (possibly because the first two are
+# default modules?).
+#
+- name: Add initramfs module lz4
+  become: true
+  ansible.builtin.lineinfile:
+    # ALTLY: Use `dest` or `path`.
+    path: /etc/initramfs-tools/modules
+    # regexp: '^lz4$'
+    line: 'lz4'
+    state: present
+#
+- name: Add initramfs module lz4_compress
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/initramfs-tools/modules
+    # regexp: '^lz4_compress$'
+    line: 'lz4_compress'
+    state: present
+
+- name: Add initramfs module zsmalloc
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/initramfs-tools/modules
+    # regexp: '^zsmalloc$'
+    line: 'zsmalloc'
+    state: present
+
+# ***
+
+# REFER: From `man update-initramfs`:
+#   -u            This mode updates an existing initramfs.
+#   -k  version   Set the specific kernel version for whom the
+#                 initramfs will be generated.
+#
+#                 For example the output of `uname -r` for your
+#                 currently running kernel.
+#
+#                 This argument is optional for update.
+#                 The default is the latest kernel version.
+#
+#   -k all        The use of "all" for the version string specifies that
+#                 update-initramfs should operate on all installed kernel
+#                 versions (with -c), or on all installed kernel versions
+#                 that already have an initramfs (with -d or -u).
+#
+#   -c            This mode creates a new initramfs.
+#
+# - Note this means `update-initramfs -u` is generally sufficient, esp.
+#   on a fresh install (where there's only 1 kernel); but we'll include
+#   `-k all` for completeness.
+
+- name: Update initramfs
+  become: true
+  # ISOFF/2025-11-11: There actually shouldn't be any reason to rebuild old kernels:
+  #   ansible.builtin.command: "update-initramfs -u -k all"
+  ansible.builtin.command: "update-initramfs -u"
+
+# ***
+
+# You can enable zswap at runtime, or better yet have GRUB start it.
+#
+# SAVVY: There are 2 variables we could use:
+#   GRUB_CMDLINE_LINUX="..."
+# Or:
+#   GRUB_CMDLINE_LINUX_DEFAULT="quiet splash ..."
+# Where:
+# - Options in GRUB_CMDLINE_LINUX are always effective.
+# - Options in GRUB_CMDLINE_LINUX_DEFAULT are effective ONLY during
+#   normal boot (NOT during recovery mode).
+# For safety's sake, seems like a better idea to use the latter (though
+# a certain Reddit thread I found suggested the other way around).
+#
+# PREVY: Note that z3fold deprecated in 2025, and may soon be removed
+# from the kernel, replaced by zsmalloc. So what was this:
+#   ... zswap.zpool=z3fold
+# is now this:
+#   ... zswap.zpool=zsmalloc
+#
+# REFER:
+# - Default max. pool percentage is 20 (on low-memory hosts, it is often
+#   set to 40), e.g.:
+#     $ cat /sys/module/zswap/parameters/max_pool_percent
+#     20
+# - You can verify swap enabled via dmesg and swapon, e.g.:
+#     $ sudo dmesg | grep zswap
+#     zswap: loaded using pool lz4/zsmalloc
+#     $ swapon --show
+#     ...
+
+- name: Enable zswap via GRUB
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    backrefs: true
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"$'
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="\1 zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20 zswap.zpool=zsmalloc"'
+    state: present
+
+# DUNNO/2025-11-11: Ansible Lint complains about name:
+#   "Commands should not change things if nothing needs doing."
+# - E.g., for either of these:
+#   - name: Update GRUB
+#   - name: "Update GRUB"
+# - So adding noqa directive.
+- name: Update GRUB # noqa no-changed-when
+  become: true
+  ansible.builtin.command: "update-grub"
+
+# ***
+
+# DUNNO/2025-11-11: On Debian 13, lz4 is not availble at boot time,
+# even though /etc/initramfs-tools/modules updated, and after call-
+# ing update-initramfs; but you can enable it after booting, e.g.:
+#
+#   $ apt search lz4
+#   ...
+#   liblz4-1/stable,now 1.10.0-4 amd64 [installed]
+#     Fast LZ compression algorithm library - runtime
+#
+#   $ tail -4 /etc/initramfs-tools/modules
+#   bochs
+#   lz4
+#   lz4_compress
+#   zsmalloc
+#
+#   $ sudo update-initramfs -u -k all
+#   update-initramfs: Generating /boot/initrd.img-6.12.48+deb13-amd64
+#
+#   $ sudo reboot
+#
+#   $ grep -r . /sys/module/zswap/parameters/ | grep compressor
+#   /sys/module/zswap/parameters/compressor:lzo
+#
+#   $ sudo dmesg | grep -i zswap
+#   ...
+#   [    0.613286] zswap: compressor lz4 not available, using default lzo
+#
+#   $ sudo su
+#
+#   # echo lz4 > /sys/module/zswap/parameters/compressor
+#
+#   # grep -r . /sys/module/zswap/parameters/ | grep compressor
+#   /sys/module/zswap/parameters/compressor:lz4
+#
+# Fortunately there's an easy way to configure attribute values
+# during system boot using sysfsutils, by creating a conf. file
+# under /etc/sysfs.d/, e.g., /etc/sysfs.d/zswap.conf.
+#
+# THANX:
+# https://www.24x7serversupport.com/blog/how-to-use-lightweight-compressed-cache-for-swap-pages/
+# - BEGET:
+#   https://www.reddit.com/r/debian/comments/1myqodp/using_zswap_on_a_system_with_an_encrypted_lvm/
+#   https://www.reddit.com/r/debian/comments/1n2g8fy/problems_with_zswap_on_debian_13/
+
+- name: Update APT package cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade APT to the latest packages
+  become: true
+  ansible.builtin.apt:
+    upgrade: safe
+
+- name: Install APT package — sysfsutils
+  become: true
+  ansible.builtin.apt:
+    name: sysfsutils
+
+- name: Build /etc/sysfs.d/zswap.conf — enabled
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysfs.d/zswap.conf
+    regexp: '^module/zswap/parameters/enabled\s\+='
+    line: 'module/zswap/parameters/enabled = Y'
+    state: present
+    create: true
+
+- name: Build /etc/sysfs.d/zswap.conf — zpool
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysfs.d/zswap.conf
+    regexp: '^module/zswap/parameters/zpool\s\+='
+    line: 'module/zswap/parameters/zpool = zsmalloc'
+    state: present
+
+- name: Build /etc/sysfs.d/zswap.conf — compressor
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysfs.d/zswap.conf
+    regexp: '^module/zswap/parameters/compressor\s\+='
+    line: 'module/zswap/parameters/compressor = lz4'
+    state: present
+
+- name: Build /etc/sysfs.d/zswap.conf — max_pool_percent
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysfs.d/zswap.conf
+    regexp: '^module/zswap/parameters/max_pool_percent\s\+='
+    line: 'module/zswap/parameters/max_pool_percent = 20'
+    state: present
+
+- name: Build /etc/sysfs.d/zswap.conf — same_filled_pages_enabled
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysfs.d/zswap.conf
+    regexp: '^module/zswap/parameters/same_filled_pages_enabled\s\+='
+    line: 'module/zswap/parameters/same_filled_pages_enabled = Y'
+    state: present
+
+# ***

@@ -11,6 +11,7 @@
   tags:
     - cli-gocryptfs
     - disable-unused-services
+    - grub-initramfs-zswap
     - install-packages-opsec
     - pam-sshd-overkill
     - setup-log-watch
