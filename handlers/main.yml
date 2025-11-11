@@ -32,4 +32,6 @@
 # I.e., sudo systemctl restart ssh
 - name: Restart sshd
   become: true
-  service: name=sshd state=restarted
+  ansible.builtin.service:
+    name: sshd
+    state: restarted

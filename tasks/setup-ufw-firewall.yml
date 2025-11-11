@@ -45,7 +45,7 @@
       sed -E 's/^\[(.*)\].*/\1/' | \
       sort -r -n | \
       xargs -I '{}' ufw --force delete {}
-  become: yes
+  become: true
 
 # E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
@@ -80,7 +80,7 @@
       awk '{print $1}' | \
       sort -r -n | \
       xargs -I '{}' /sbin/{{ item }} --delete INPUT {}
-  become: yes
+  become: true
   loop:
     - iptables
     - ip6tables
@@ -97,7 +97,7 @@
       -m mac \
       --mac-source {{ item[1] }} \
       -j ACCEPT
-  become: yes
+  become: true
   notify: Persist iptables
   loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_ssh_restrict_macs) | list }}"
   when: zoidy_troglodyte_ssh_restrict_macs | length > 0
@@ -112,7 +112,7 @@
       -p tcp \
       --dport {{ item[1] }} \
       -j ACCEPT
-  become: yes
+  become: true
   notify: Persist iptables
   loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports_tcp) | list }}"
   when: zoidy_troglodyte_firewall_ports_tcp | length > 0
@@ -132,7 +132,7 @@
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  become: yes
+  become: true
   notify: Persist iptables
   loop: "{{ zoidy_troglodyte_firewall_ports_tcp }}"
   when: zoidy_troglodyte_firewall_ports_tcp | length > 0
@@ -149,7 +149,7 @@
 - name: Accept incoming packets for outbound connections (received as part of established connection)
   ansible.builtin.shell: >
     /sbin/{{ item }} -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-  become: yes
+  become: true
   loop:
     - iptables
     - ip6tables
@@ -159,7 +159,7 @@
 - name: Accept incoming packets for outbound connections (received as part of established connection)
   ansible.builtin.shell: >
     /sbin/{{ item }} -A INPUT -i lo -j ACCEPT
-  become: yes
+  become: true
   loop:
     - iptables
     - ip6tables

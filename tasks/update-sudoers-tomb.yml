@@ -5,7 +5,7 @@
 ---
 
 - name: Add tomb to sudoers, to avoid double-prompting
-  become: yes
+  become: true
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/bin/tomb"
@@ -15,7 +15,7 @@
 # ***
 
 - name: Add swapoff to sudoers, for less prompting when tombing
-  become: yes
+  become: true
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapoff"
@@ -25,10 +25,9 @@
 # ***
 
 - name: Add e2label-show to sudoers, so travel.sh may identify specific tombs
-  become: yes
+  become: true
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     state: present
-

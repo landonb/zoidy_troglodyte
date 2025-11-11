@@ -41,7 +41,7 @@
   ansible.builtin.copy:
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
-    mode: 0775
+    mode: '0775'
   # ISOFF/2024-03-21: See note above. This is alt to timer.
   when: False
 

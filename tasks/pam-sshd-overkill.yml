@@ -6,14 +6,16 @@
 
 - name: Ensure /root/bin exists
   become: true
-  ansible.builtin.file: path=/root/bin state=directory
+  ansible.builtin.file:
+    path: /root/bin
+    state: directory
 
 - name: Add Enemy IP intrusion detection email-alert script
   become: true
   ansible.builtin.template:
     src: alert-ssh-login.j2
     dest: /root/bin/alert-ssh-login
-    mode: 0775
+    mode: '0775'
 
 - name: Wire Enemy IP intrusion detection email-alert task to PAM sshd
   become: true
@@ -68,4 +70,3 @@
     src: "{{ zoidy_troglodyte_pam_sshd_motd }}"
     dest: /etc/motd
   when: zoidy_troglodyte_pam_sshd_motd != ''
-
