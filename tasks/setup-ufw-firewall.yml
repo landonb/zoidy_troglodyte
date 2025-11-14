@@ -22,8 +22,49 @@
 #   iptables -P OUTPUT ACCEPT
 #   iptables -P FORWARD ACCEPT
 # For way more information than you really need (but that StackOverflowers
-# tend to request), generate a --verbose, --numeric report:
-#   iptables/ip6tables -L [INPUT] -v -n
+# tend to request), generate a --verbose, --numeric report, e.g.:
+#   sudo ip6tables -L INPUT -v -n
+#   sudo ip6tables -L OUTPUT -v -n
+#   sudo ip6tables -L FORWARD -v -n
+#   sudo ip6tables -L ufw6-before-input -v -n
+#   ...
+#   # Similarly for iptables:
+#   sudo iptables ...
+#   # To see all chains' rules:
+#   sudo ip6tables -L -v -n
+
+# ***
+
+# SAVVY/2025-11-11: Lately, or at least on Debian but not Linux Mint
+# (not sure when it started happening, but at least in Debian 12
+#  (circa 2025), and not having been an issue in Linux Mint 21.3):
+#
+#   ufw is uninstalled if you apt-install
+#
+#     'iptables-persistent' or 'iptables-persistent'
+#
+#   (and those are uninstalled if you reinstall 'ufw').
+#
+#   - See THOTS below: I think there's a race condition on boot
+#     between iptables-persistent and ufw setting its rules, so
+#     (at least) Debian disallows having both installed.
+#
+# - So now we only interact with either ip(6)tables or ufw (and
+#   we ensure that each step below has a task for both approaches;
+#   well, except for the MAC addy INPUT restrictions, which I do
+#   no think ufw supports).
+#   - SAVVY: Use slightly more complicate iptables to be extra anal
+#     and restrict SSH connections by matching MAC addresses.
+#     - Otherwise use slightly more user-friendly ufw if you don't
+#       need to be so anal and want a simpler firewall configurer
+#       (e.g., if you expect to need to configure the firewall
+#        beyond what's configured herein, and you don't want to
+#        deal with iptables).
+
+- name: Select iptables/ip6tables or ufw (cannot have both!)
+  ansible.builtin.set_fact:
+    zoidy_firewall_iptables: true
+    zoidy_firewall_ufw: false
 
 # ***
 
@@ -34,36 +75,70 @@
 #   sudo iptables -P INPUT ACCEPT
 # Or:
 #   sudo ufw default allow incoming
-- name: Allow all incoming traffic ufw
-  become: true
-  ansible.builtin.ufw: state=enabled policy=allow direction=incoming
 
-- name: Remove existing UFW rules
+- name: Allow all incoming traffic — iptables/ip6tables
+  become: true
   ansible.builtin.shell: >
+    /sbin/{{ item }} -P INPUT ACCEPT
+  loop:
+    - iptables
+    - ip6tables
+  when: zoidy_firewall_iptables
+
+- name: Allow all incoming traffic — ufw
+  become: true
+  ansible.builtin.ufw:
+    state: enabled
+    policy: allow
+    direction: incoming
+  when: zoidy_firewall_ufw
+
+# ***
+
+# Remove existing rules.
+
+- name: Remove existing rules — ufw
+  become: true
+  # REFER: Ansible Lint gripes if pipefail is missing, good catch!
+  # - set -e: exit immediately on non-zero status from pipeline.
+  # - set -o pipefail: use return value of rightmost command to
+  #                    exit nonzero, or 0 if all successful.
+  ansible.builtin.shell: >
+    set -e -o pipefail
     ufw status numbered | \
       grep "^\[" | \
       sed -E 's/^\[(.*)\].*/\1/' | \
       sort -r -n | \
       xargs -I '{}' ufw --force delete {}
-  become: true
+  when: zoidy_firewall_ufw
+
+# ***
 
 # E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
   become: true
-  ansible.builtin.ufw: rule=allow port={{ zoidy_troglodyte_ssh_port }} proto=tcp
-  when: zoidy_troglodyte_ssh_restrict_macs | length == 0
+  ansible.builtin.ufw:
+    rule: allow
+    port: "{{ zoidy_troglodyte_ssh_port }}"
+    proto: tcp
+  when: zoidy_firewall_ufw and (zoidy_troglodyte_ssh_restrict_macs | length == 0)
+
+# ***
 
 # NOTED/2023-04-13: I've never enabled Mosh (mobile shell) traffic. (I just use SSH.)
 # - I don't know much about Mosh. Sounds similar to `screen` or `tmux`.
 # CXREF: https://en.wikipedia.org/wiki/Mosh_(software)
+#
+# INERT: Add iptables/ip6tables equivalent.
 - name: Allow mosh traffic
   become: true
   ansible.builtin.ufw:
     rule: allow
     proto: udp
     port: "{{ zoidy_troglodyte_mosh_port_beg }}:{{ zoidy_troglodyte_mosh_port_end }}"
-  # 2019-03-19 00:01: Pretty sure no need to mosh. Not tonight, at least.
-  when: False
+  # ISOFF/2019-03-19: Pretty sure no need to mosh. Not tonight, at least.
+  #   when: zoidy_firewall_ufw
+  when: zoidy_firewall_ufw and false
 
 # ***
 
@@ -73,6 +148,7 @@
 #     Chain INPUT (policy ACCEPT)
 #   - We ignore this line with an inverted match (grep -v).
 - name: Delete existing iptables/ip6tables INPUT rules
+  become: true
   ansible.builtin.shell: >
     /sbin/{{ item }} -L INPUT --line-numbers | \
       grep ACCEPT | \
@@ -80,15 +156,20 @@
       awk '{print $1}' | \
       sort -r -n | \
       xargs -I '{}' /sbin/{{ item }} --delete INPUT {}
-  become: true
   loop:
     - iptables
     - ip6tables
+  when: zoidy_firewall_iptables
+
+# ***
 
 # E.g.,
 #   sudo iptables  -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
 #   sudo ip6tables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
-- name: "Allow ssh traffic from *just my devices* (based on their MACs)"
+#
+# - SAVVY: Note there is no ufw equivalent, AFAIK.
+- name: "Allow ssh traffic from *just my devices* (based on their MACs) — iptables *ONLY*"
+  become: true
   ansible.builtin.shell: >
     /sbin/{{ item[0] }} \
       -A INPUT \
@@ -97,25 +178,24 @@
       -m mac \
       --mac-source {{ item[1] }} \
       -j ACCEPT
-  become: true
-  notify: Persist iptables
   loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_ssh_restrict_macs) | list }}"
-  when: zoidy_troglodyte_ssh_restrict_macs | length > 0
+  notify: Persist iptables
+  when: zoidy_firewall_iptables and (zoidy_troglodyte_ssh_restrict_macs | length > 0)
 
 # ***
 
 # CXREF: See `man 8 iptables-extensions` for --dport/--destination-port docs.
-- name: Add ip6tables rules for user-specified TCP service ports
+- name: Add rules for user-specified TCP service ports (if you've defined any) — iptables
+  become: true
   ansible.builtin.shell: >
     /sbin/{{ item[0] }} \
       -A INPUT \
       -p tcp \
       --dport {{ item[1] }} \
       -j ACCEPT
-  become: true
-  notify: Persist iptables
   loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_firewall_ports_tcp) | list }}"
-  when: zoidy_troglodyte_firewall_ports_tcp | length > 0
+  notify: Persist iptables
+  when: zoidy_firewall_iptables and (zoidy_troglodyte_firewall_ports_tcp | length > 0)
 
 # E.g., sudo ufw allow <item>/tcp
 # - UTEST: E.g.,
@@ -127,15 +207,15 @@
 #     @testhost $ nc -l ${localip} 6443 -v
 #     # From another host
 #     @otherhost $ nc testhost 6443 -v
-- name: "Add ufw rules for user-specified TCP service ports (if you've defined any)"
+#
+- name: "Add rules for user-specified TCP service ports (if you've defined any) — ufw"
+  become: true
   ansible.builtin.ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  become: true
-  notify: Persist iptables
   loop: "{{ zoidy_troglodyte_firewall_ports_tcp }}"
-  when: zoidy_troglodyte_firewall_ports_tcp | length > 0
+  when: zoidy_firewall_ufw and (zoidy_troglodyte_firewall_ports_tcp | length > 0)
 
 # ***
 
@@ -146,23 +226,27 @@
 # - SAVVY/2023-04-13: These rules are necessary for -P INPUT DROP to work
 #   as intended (otherwise outbound connections can be made, but your app
 #   won't see any responses from the remote).
-- name: Accept incoming packets for outbound connections (received as part of established connection)
+- name: Accept incoming packets for outbound connections for established connections — iptables
+  become: true
   ansible.builtin.shell: >
     /sbin/{{ item }} -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-  become: true
   loop:
     - iptables
     - ip6tables
+  when: zoidy_firewall_iptables
 
 # - SAVVY/2023-04-13: Inbound packets for established connections don't
 #   work for me without also accepting all inbound packets from localhost.
-- name: Accept incoming packets for outbound connections (received as part of established connection)
+- name: Accept incoming packets for outbound connections for localhost — iptables
+  become: true
   ansible.builtin.shell: >
     /sbin/{{ item }} -A INPUT -i lo -j ACCEPT
-  become: true
   loop:
     - iptables
     - ip6tables
+  when: zoidy_firewall_iptables
+
+# ***
 
 # This completes firewall setup, if you've updated group_vars correctly (in
 #   ~/.zoidy/group_vars/zoidy_troglodyte
@@ -170,78 +254,131 @@
 # - If not, you might lose access via Ansible, and you'll need to logon the
 #   managed node directly, run `sudo iptables -P INPUT ACCEPT`, and then fix
 #   the problem(s).
-#
+
 # Runs, e.g.,
+#
 #   sudo iptables -P INPUT DROP
-# Or:
-#   sudo ufw default deny incoming
-- name: Default ufw deny incoming
+#
+# - HSTRY/2025-11-11: On LM 21.3, only the ufw module was run
+#   here (sudo ufw default deny incoming) but not this new
+#   iptables equivalent (ip(6)tables -P INPUT DROP), but the
+#   ufw effect would show up in iptables, e.g.,
+#       $ sudo iptables -L | head -1
+#       Chain INPUT (policy DROP)
+#   but now that ufw is not co-habitable with iptables, if we
+#   only run the ufw module (sudo ufw default deny incoming),
+#   after we'd apt-install the '*-persistent' packages, which
+#   uninstall ufw, the policy is disgarded, e.g.,
+#       $ sudo iptables -L | head -1
+#       Chain INPUT (policy ACCEPT)
+#   which seems to suggest the ufw policies are stored separately
+#   but combined with iptables rules, and `iptables -L` shows
+#   those *combined* rules (though I could be wrong; this is
+#   just an observation I made, with a possible explanation).
+#   - In any case, now we've got a specific iptables call to
+#     ensure that DROP is the default policy.
+
+- name: Default deny incoming — iptables
   become: true
-  ansible.builtin.ufw: state=enabled policy=deny direction=incoming
+  ansible.builtin.shell: >
+    /sbin/{{ item }} -P INPUT DROP
+  loop:
+    - iptables
+    - ip6tables
+  when: zoidy_firewall_iptables
+
+# Runs, e.g.,
+#
+#   sudo ufw default deny incoming
+- name: Default deny incoming — ufw
+  become: true
+  ansible.builtin.ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+  when: zoidy_firewall_ufw
+#
 
 # ***
 
-# BWARE/2024-06-06: If running over SSH, Ansible might fail on the
-# next command, more specifically fails once each on both loop items,
-# then stops the play.
-# - I'd guess because previous ufw change, but perhaps something
-#   else, difficult to tell, as the error basically says
-#   "Shared connection to localhost closed."
-# - Tho also says "SyntaxError: future feature annotations is not defined"
-#   and "MODULE FAILURE\nSee stdout/stderr for the exact error" so might
-#   be issue with a particular host (and I don't want to spend time
-#   diagnosing further, so stopping investigation at this comment).
+# BWARE/2024-06-06: (Observed on Linux Mint 21.3, which didn't evict
+# 'ufw' when apt-installing these two packages):
+# - If running over SSH, Ansible might fail on the next command, more
+#   specifically fails once each on both loop items, then stops the play.
+#   - I'd guess because previous ufw change, but perhaps something
+#     else, difficult to tell, as the error basically says
+#     "Shared connection to localhost closed."
+#   - Tho also says "SyntaxError: future feature annotations is not defined"
+#     and "MODULE FAILURE\nSee stdout/stderr for the exact error" so might
+#     be issue with a particular host (and I don't want to spend time
+#     diagnosing further, so stopping investigation at this comment).
+# BWARE/2025-11-11: On at least modern Debian, these apt-install
+# commands will uninstall the 'ufw' package, if it's present (see
+# comments throughout this file).
 
 - name: Install packages to persist/save iptables/ip6tables firewall settings across boots
   become: true
-  ansible.builtin.apt: name={{ item }}
+  ansible.builtin.apt:
+    name: "{{ item }}"
   loop:
     - netfilter-persistent
     - iptables-persistent
+  when: zoidy_firewall_iptables
 
 - name: Ensure that netfilter-persistent will be enabled at boot
   become: true
   ansible.builtin.systemd:
     name: netfilter-persistent
     state: started
-    enabled: yes
+    enabled: true
+  when: zoidy_firewall_iptables
 
-# The netfilter-persistent service sometimes fails on boot.
+# HSTRY/2025-11-11: Previously observed on Linux Mint, but
+# (so far) not on modern Debian:
 #
-# - It needs to wait for UFW to start, it seems.
+# - The netfilter-persistent service sometimes fails on boot.
 #
-# - (lb): If look in the directory:
+#   - It needs to wait for UFW to start, it seems.
 #
-#     /usr/share/netfilter-persistent/plugins.d/
+#   - If I look in the directory:
 #
-#   and edit
+#       /usr/share/netfilter-persistent/plugins.d/
 #
-#     15-ip4tables (or /25-ip6tables)
+#     and edit
 #
-#   and make the restore task verbose:
+#       15-ip4tables (or /25-ip6tables)
 #
-#     /sbin/iptables-restore --verbose
+#     and make the restore task verbose:
 #
-#     (or /sbin/ip6tables-restore --verbose)
+#       /sbin/iptables-restore --verbose
 #
-# you'll see that when netfilter-persistent runs, it deletes a number of
-# `ufw-*` (or `ufw6-*`) chains. So I assume the error that occurs on boot
-# is that UFW is not always started before netfilter-persistent, and those
-# rules are not always present. However, I am not 💯, because `*-restore`
-# (even with --verbose) does not indicate an error. Rather, you'll see
-# the error in /var/log/syslog, e.g.:
-#     [578] 9345:22:Mar 25 11:49:59 host netfilter-persistent[850]:
-#       Deleting chain `ufw6-track-output'
-#     [579] 9348:22:Mar 25 11:49:59 host netfilter-persistent[850]:
-#       run-parts: /usr/share/netfilter-persistent/plugins.d/25-ip6tables exited with return code 1
+#       (or /sbin/ip6tables-restore --verbose)
 #
-# - See also: "netfilter-persistent fails randomly during boot; restarting later works"
+#     I see when netfilter-persistent runs, it deletes a number of
+#     `ufw-*` (or `ufw6-*`) chains. So I assume the error that occurs on
+#     boot is that UFW is not always started before netfilter-persistent,
+#     and those rules are not always present. However, I am not 💯,
+#     because `*-restore` (even with --verbose) does not indicate an error.
 #
-#   https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=867560
+#     Rather, you'll see the error in /var/log/syslog, e.g.:
+#       [578] 9345:22:Mar 25 11:49:59 host netfilter-persistent[850]:
+#         Deleting chain `ufw6-track-output'
+#       [579] 9348:22:Mar 25 11:49:59 host netfilter-persistent[850]:
+#         run-parts: /usr/share/netfilter-persistent/plugins.d/25-ip6tables exited with return code 1
 #
-#   Wherein the issue was closed because the reported stopped replying,
-#   and because the investigator was able to work around the issue if
-#   they "preload the modules that iptables needs".
+#   - See also: "netfilter-persistent fails randomly during boot; restarting later works"
+#
+#       https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=867560
+#
+#     Wherein the issue was closed because the reporter stopped replying,
+#     and because the investigator was able to work around the issue if
+#     they "preload the modules that iptables needs".
+#
+# - THOTS/2025-11-11: I assume this issue is moot now that Debian does not
+#   allow ufw and iptables to both be installed when iptables-persistent
+#   or netfilter-persistent are installed. (And perhaps why Debian does
+#   now allow it, because a race condition on boot between ufw and
+#   iptables-persistent?)
 #
 - name: "Ensure that netfilter-persistent starts after UFW, via Wants="
   become: true
@@ -252,6 +389,7 @@
     regexp: "^Wants="
     line: "Wants=systemd-modules-load.service local-fs.target ufw.service"
     state: present
+  when: zoidy_firewall_iptables
 
 - name: "Ensure that netfilter-persistent starts after UFW, via After="
   become: true
@@ -262,4 +400,6 @@
     regexp: "^After="
     line: "After=systemd-modules-load.service local-fs.target ufw.service"
     state: present
+  when: zoidy_firewall_iptables
 
+# ***
