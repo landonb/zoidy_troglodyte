@@ -153,6 +153,20 @@
   notify: Persist iptables
   when: zoidy_firewall_iptables and (zoidy_troglodyte_ssh_restrict_macs | length > 0)
 
+- name: "Allow all ssh traffic if no MACs specified — iptables *ONLY*"
+  become: true
+  ansible.builtin.shell: >
+    /sbin/{{ item }} \
+      -A INPUT \
+      -p tcp \
+      --destination-port {{ zoidy_troglodyte_ssh_port }} \
+      -j ACCEPT
+  loop:
+    - iptables
+    - ip6tables
+  notify: Persist iptables
+  when: zoidy_firewall_iptables and (zoidy_troglodyte_ssh_restrict_macs | length == 0)
+
 # E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
   become: true
