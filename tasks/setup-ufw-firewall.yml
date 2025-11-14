@@ -105,6 +105,7 @@
 - name: Delete existing iptables/ip6tables INPUT rules
   become: true
   ansible.builtin.shell: >
+    set -e -o pipefail
     /sbin/{{ item }} -L INPUT --line-numbers | \
       grep ACCEPT | \
       grep -v "policy ACCEPT" | \
