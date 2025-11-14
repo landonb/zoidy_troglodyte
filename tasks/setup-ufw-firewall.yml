@@ -9,8 +9,8 @@
 #                     #        (i.e., you'll need to logon directly to recover).
 #   sudo ufw reset    # DUNNO: I haven't investigated to know if this does same
 #                     #        as `iptables -F` or something different.
-# You can also reset each chain separately: 
-#   iptables -F INPUT 
+# You can also reset each chain separately:
+#   iptables -F INPUT
 #   iptables -F OUTPUT
 #   iptables -F FORWARD
 # SAVVY: Use this if you see [UFW BLOCK] in /var/log/syslog, e.g., reset
