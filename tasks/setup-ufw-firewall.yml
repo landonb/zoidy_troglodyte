@@ -97,6 +97,25 @@
 
 # Remove existing rules.
 
+# - SAVVY/2023-04-13: We set ACCEPT all previously (until we default deny
+#   incoming later), which means first line of `iptables -L INPUT` includes
+#   ACCEPT, e.g.,:
+#     Chain INPUT (policy ACCEPT)
+#   - We ignore this line with an inverted match (grep -v).
+- name: Delete existing iptables/ip6tables INPUT rules
+  become: true
+  ansible.builtin.shell: >
+    /sbin/{{ item }} -L INPUT --line-numbers | \
+      grep ACCEPT | \
+      grep -v "policy ACCEPT" | \
+      awk '{print $1}' | \
+      sort -r -n | \
+      xargs -I '{}' /sbin/{{ item }} --delete INPUT {}
+  loop:
+    - iptables
+    - ip6tables
+  when: zoidy_firewall_iptables
+
 - name: Remove existing rules — ufw
   become: true
   # REFER: Ansible Lint gripes if pipefail is missing, good catch!
@@ -139,27 +158,6 @@
   # ISOFF/2019-03-19: Pretty sure no need to mosh. Not tonight, at least.
   #   when: zoidy_firewall_ufw
   when: zoidy_firewall_ufw and false
-
-# ***
-
-# - SAVVY/2023-04-13: We set ACCEPT all previously (until we default deny
-#   incoming later), which means first line of `iptables -L INPUT` includes
-#   ACCEPT, e.g.,:
-#     Chain INPUT (policy ACCEPT)
-#   - We ignore this line with an inverted match (grep -v).
-- name: Delete existing iptables/ip6tables INPUT rules
-  become: true
-  ansible.builtin.shell: >
-    /sbin/{{ item }} -L INPUT --line-numbers | \
-      grep ACCEPT | \
-      grep -v "policy ACCEPT" | \
-      awk '{print $1}' | \
-      sort -r -n | \
-      xargs -I '{}' /sbin/{{ item }} --delete INPUT {}
-  loop:
-    - iptables
-    - ip6tables
-  when: zoidy_firewall_iptables
 
 # ***
 
