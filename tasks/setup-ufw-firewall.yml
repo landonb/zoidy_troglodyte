@@ -133,6 +133,25 @@
 
 # ***
 
+# E.g.,
+#   sudo iptables  -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
+#   sudo ip6tables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
+#
+# - SAVVY: Note there is no ufw equivalent, AFAIK.
+- name: "Allow ssh traffic from *just my devices* (based on their MACs) — iptables *ONLY*"
+  become: true
+  ansible.builtin.shell: >
+    /sbin/{{ item[0] }} \
+      -A INPUT \
+      -p tcp \
+      --destination-port {{ zoidy_troglodyte_ssh_port }} \
+      -m mac \
+      --mac-source {{ item[1] }} \
+      -j ACCEPT
+  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_ssh_restrict_macs) | list }}"
+  notify: Persist iptables
+  when: zoidy_firewall_iptables and (zoidy_troglodyte_ssh_restrict_macs | length > 0)
+
 # E.g., sudo ufw allow 22/tcp  # Substitute 22 with your unconventional SSH port number
 - name: Allow ssh traffic
   become: true
@@ -158,27 +177,6 @@
   # ISOFF/2019-03-19: Pretty sure no need to mosh. Not tonight, at least.
   #   when: zoidy_firewall_ufw
   when: zoidy_firewall_ufw and false
-
-# ***
-
-# E.g.,
-#   sudo iptables  -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
-#   sudo ip6tables -A INPUT -p tcp --destination-port 22 -m mac --mac-source XX:XX:XX:XX:XX:XX -j ACCEPT
-#
-# - SAVVY: Note there is no ufw equivalent, AFAIK.
-- name: "Allow ssh traffic from *just my devices* (based on their MACs) — iptables *ONLY*"
-  become: true
-  ansible.builtin.shell: >
-    /sbin/{{ item[0] }} \
-      -A INPUT \
-      -p tcp \
-      --destination-port {{ zoidy_troglodyte_ssh_port }} \
-      -m mac \
-      --mac-source {{ item[1] }} \
-      -j ACCEPT
-  loop: "{{ ['iptables', 'ip6tables'] | product(zoidy_troglodyte_ssh_restrict_macs) | list }}"
-  notify: Persist iptables
-  when: zoidy_firewall_iptables and (zoidy_troglodyte_ssh_restrict_macs | length > 0)
 
 # ***
 
