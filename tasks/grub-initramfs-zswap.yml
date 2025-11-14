@@ -4,6 +4,34 @@
 # License: GPLv3
 ---
 
+# REFER: See these Arch docs for good explanation of Zram & Zswap:
+#
+#   - *zswap*, compressed RAM cache for swap pages, works with a backing
+#      swap device (either a separate partition, or a swapfile):
+#
+#        https://wiki.archlinux.org/title/Zswap
+#
+#   - *zram*, née *compcache*, compressed block device in RAM, for swap,
+#      etc., without using a backing swap device (partition or swapfile):
+#
+#        https://wiki.archlinux.org/title/Zram
+#
+# REFER: Run `swapon -s` to see activate swap details:
+#
+#   swapon -s
+#
+# REFER: Grep Zwap parameters files to see current swap options:
+#
+#   grep -r . /sys/module/zswap/parameters/
+#
+# - You can also enable these settings at runtime, e.g.,
+#
+#   echo lz4 > /sys/module/zswap/parameters/compressor
+#
+# REFER: Grep dmesg to check for errors, e.g.,
+#
+#   sudo dmesg | grep -i zswap
+
 # ***
 
 # SAVVY/2025-11-10: The first two steps (lz4 and lz4_compress) are
