@@ -62,4 +62,22 @@ zoidy_troglodyte_include_dev_packages: false
 #   update-sudoers-tomb
 zoidy_troglodyte_update_sudoers_add_all: false
 
+# USAGE: Options for opt-in 'grub-initramfs-zswap' task:
+# - Set zoidy_troglodyte_zswap_grub true to update
+#   /etc/initramfs-tools/modules and /etc/default/grub to
+#   enable zswap at GRUB boot time.
+# - Which is completely unnecessary; it's easy enough to
+#   enable during system boot using sysfsutils (which
+#   happens shortly after GRUB boot time; see the next
+#   option); and it doesn't work for the author (at least
+#   not on a particular Debian 13 host that I tried it on,
+#   even though I followed all the instructions I found
+#   online, whatever).
+zoidy_troglodyte_zswap_grub: false
+# - Rather than enable via GRUB, enable zswap during OS
+#   boot instead. (You can enable from GRUB *and* from
+#   sysfsutils, so you don't need to disable this if
+#   you want to enable the GRUB option.)
+zoidy_troglodyte_zswap_sysfsutils: true
+
 # ***

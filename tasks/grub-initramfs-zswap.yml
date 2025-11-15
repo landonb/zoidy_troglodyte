@@ -48,6 +48,7 @@
     # regexp: '^lz4$'
     line: 'lz4'
     state: present
+  when: zoidy_troglodyte_zswap_grub
 #
 - name: Add initramfs module lz4_compress
   become: true
@@ -56,6 +57,7 @@
     # regexp: '^lz4_compress$'
     line: 'lz4_compress'
     state: present
+  when: zoidy_troglodyte_zswap_grub
 
 - name: Add initramfs module zsmalloc
   become: true
@@ -64,6 +66,7 @@
     # regexp: '^zsmalloc$'
     line: 'zsmalloc'
     state: present
+  when: zoidy_troglodyte_zswap_grub
 
 # ***
 
@@ -94,6 +97,7 @@
   # ISOFF/2025-11-11: There actually shouldn't be any reason to rebuild old kernels:
   #   ansible.builtin.command: "update-initramfs -u -k all"
   ansible.builtin.command: "update-initramfs -u"
+  when: zoidy_troglodyte_zswap_grub
 
 # ***
 
@@ -135,6 +139,7 @@
     regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"$'
     line: 'GRUB_CMDLINE_LINUX_DEFAULT="\1 zswap.enabled=1 zswap.compressor=lz4 zswap.max_pool_percent=20 zswap.zpool=zsmalloc"'
     state: present
+  when: zoidy_troglodyte_zswap_grub
 
 # DUNNO/2025-11-11: Ansible Lint complains about name:
 #   "Commands should not change things if nothing needs doing."
@@ -145,6 +150,7 @@
 - name: Update GRUB # noqa no-changed-when
   become: true
   ansible.builtin.command: "update-grub"
+  when: zoidy_troglodyte_zswap_grub
 
 # ***
 
@@ -197,16 +203,19 @@
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Upgrade APT to the latest packages
   become: true
   ansible.builtin.apt:
     upgrade: safe
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Install APT package — sysfsutils
   become: true
   ansible.builtin.apt:
     name: sysfsutils
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Build /etc/sysfs.d/zswap.conf — enabled = Y
   become: true
@@ -216,6 +225,7 @@
     line: 'module/zswap/parameters/enabled = Y'
     state: present
     create: true
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Build /etc/sysfs.d/zswap.conf — zpool = zsmalloc
   become: true
@@ -224,6 +234,7 @@
     regexp: '^module/zswap/parameters/zpool\s\+='
     line: 'module/zswap/parameters/zpool = zsmalloc'
     state: present
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Build /etc/sysfs.d/zswap.conf — compressor = lz4
   become: true
@@ -232,6 +243,7 @@
     regexp: '^module/zswap/parameters/compressor\s\+='
     line: 'module/zswap/parameters/compressor = lz4'
     state: present
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 - name: Build /etc/sysfs.d/zswap.conf — max_pool_percent = 20
   become: true
@@ -240,6 +252,7 @@
     regexp: '^module/zswap/parameters/max_pool_percent\s\+='
     line: 'module/zswap/parameters/max_pool_percent = 20'
     state: present
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 # IGNOR: We'll leave 2 other settings at their defaults:
 #   /sys/module/zswap/parameters/shrinker_enabled:N
@@ -257,5 +270,6 @@
     regexp: '^module/zswap/parameters/same_filled_pages_enabled\s\+='
     line: 'module/zswap/parameters/same_filled_pages_enabled = Y'
     state: present
+  when: zoidy_troglodyte_zswap_sysfsutils
 
 # ***
