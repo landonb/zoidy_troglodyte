@@ -24,6 +24,16 @@
 
 # ***
 
+- name: Add swapon to sudoers, for parity with swapoff
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapon"
+    line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapon"
+    state: present
+
+# ***
+
 - name: Add e2label-show to sudoers, so travel.sh may identify specific tombs
   become: true
   ansible.builtin.lineinfile:
