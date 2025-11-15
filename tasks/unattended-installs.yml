@@ -23,7 +23,7 @@
 # mintupdate aka unattended-installs aka unattended-upgrades
 
 - name: Enable automatic Mint updates
-  become: yes
+  become: true
   when: ansible_facts['distribution'] == 'Linux Mint'
   ansible.builtin.shell: mintupdate-automation upgrade enable
 
@@ -36,14 +36,14 @@
 # Place the same cron job that Update Manager places when you go to its
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
-  become: yes
+  become: true
   when: ansible_facts['distribution'] == 'Linux Mint'
   ansible.builtin.copy:
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
     mode: '0775'
   # ISOFF/2024-03-21: See note above. This is alt to timer.
-  when: False
+  when: false
 
 # ***
 
@@ -71,7 +71,7 @@
 #   to reboot or not, and hedges its bets, and tells you you will.
 
 - name: Install unattended-upgrades and apt-listchanges packages
-  become: yes
+  become: true
   when: ansible_facts['distribution'] == 'Debian'
   ansible.builtin.apt: name={{ item }}
   loop:
@@ -104,4 +104,3 @@
 #     let me know when it's time to upgrade packages. Because lately
 #     I only logon my Linux hosts over SSH, and my SSH logon message
 #     doesn't tell me when there are updates available.
-

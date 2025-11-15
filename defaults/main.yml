@@ -55,5 +55,6 @@ zoidy_troglodyte_unattended_hosts_skip_kernel: []
 zoidy_troglodyte_firewall_ports_tcp: []
 
 # USAGE: Set true to also install: binwalk, foremost, pgpdump.
-zoidy_troglodyte_include_dev_packages: False
+zoidy_troglodyte_include_dev_packages: false
 
+# ***
