@@ -18,6 +18,32 @@
 #   2024-03-22 05:08 23h left  2024-03-21 05:08 22m ago    update-notifier-download.timer
 #   2024-03-25 00:22  3d left  2024-03-20 08:42 20h ago    mintupdate-automation-autoremove.timer
 
+# THOTS/2025-01-06: This unattended-upgrades task is now opt-in.
+# - E.g.,
+#     ansible-playbook path/to/site.yml -l hostname --tags unattended-installs -K
+# - Author had u-u enabled for years on Linux Mint without issue, but:
+#   - There's always a possibility that an upgrade will break your
+#     workstation and impede your work for the day.
+#   - Also, I had never wired a reboot mechanism, so I rarely rebooted
+#     to realize kernel upgrades.
+#     - More recently, I've updated the shell to warn-tell when
+#       /var/run/reboot-required file detected. You'll find it
+#       in the DepoXy shell scripts:
+#         remind_restart_required
+#           https://github.com/DepoXy/depoxy#🍯
+#             https://github.com/DepoXy/depoxy/blob/release/core/mindencfs.sh
+#     - It might also be nice to email when upgrades are applied,
+#       as a heads-up, and to include a summary of changes. But
+#       we're not that fancy.
+#   - Finally, if the target host is a workstation, it's likely behind
+#     a firewall that shoud mitigate most attacks (esp. if you only
+#     have SSH exposed).
+#     - As in, you're probably not at much risk if you don't always
+#       upgrade immediately.
+#     - On the other hand, if the target is a server, you have to decide
+#       if having a patched system that's never more than 1 day behind
+#       bugfixes is worth risking downtime should an upgrade bork something.
+
 # ***
 
 # mintupdate aka unattended-installs aka unattended-upgrades

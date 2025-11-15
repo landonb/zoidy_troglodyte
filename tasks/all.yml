@@ -4,7 +4,8 @@
 # License: GPLv3
 ---
 
-# Some task(s) inspired by wonderful blog post of locking down fresh box.
+# THANX/2018-12-16: Some task(s) below inspired by wonderful blog
+# post about locking down fresh Linux box.
 #
 #  https://ryaneschinger.com/blog/securing-a-server-with-ansible/
 
@@ -69,23 +70,31 @@
 
 # ***
 
-# PROOF:
+# OPTIN: Some of the remaining tasks are opt-in.
 #
-# - name: Display ansible_run_tags
-#   debug:
-#     msg: "ansible_run_tags: {{ ansible_run_tags }}"
+# - SAVVY: Note we use `when` to enforce opt-in,
+#   and not `tags: never`, which supports site.yml
+#   role tag inheritence.
+#
+# - DEVEL: Uncomment this debug task to get an idea
+#   how ansible_run_tags is used:
+#
+#   - name: Display ansible_run_tags
+#     debug:
+#       msg: "ansible_run_tags: {{ ansible_run_tags }}"
 
-# ISOFF/2025-11-11: Install gocryptfs from APT
-# so we don't have to maintain to GH installer.
-# - So this task is now opt-in.
+# OPTIN/2025-11-11: We now recommend that you install
+# gocryptfs from APT, because the project is stable,
+# and so we don't have to maintain this GH installer.
+# - (Which is to say, this task might not work; but
+#    we're keeping it at the ready in case we ever
+#    need to revive it.)
 - name: Install Latest gocryptfs release
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: cli-gocryptfs
     apply: { tags: always }
   tags: cli-gocryptfs
-  # This task is opt-in. (Note we use `when` test, not `tags: never`,
-  # to support site.yml role tag inheritence.)
   when: "'cli-gocryptfs' in ansible_run_tags"
 
 - name: Let any user elevate ‘tomb’
@@ -97,26 +106,28 @@
 
 # ***
 
+# OPTIN/2023-05-05: This task sets up an over-the-top email
+# alert if someone SSH's from an unlisted MAC address.
+# (There's no harm enabling this, but it's something
+#  for the truly anxious, so we'd rather you specify
+#  it explicitly, so you know what you're getting.)
 - name: Wire PAM SSH intrusion detection
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: pam-sshd-overkill
     apply: { tags: always }
   tags: pam-sshd-overkill
-  # This task is opt-in. (Using `when` test, not 'never' tag, supports
-  # site.yml role tag inheritence.)
   when: "'pam-sshd-overkill' in ansible_run_tags"
 
 # ***
 
+# OPTIN: See atop task file for considerations enabling unattended-upgrades.
 - name: Configure Unattended Installs
   ansible.builtin.include_role:
     name: zoidy_troglodyte
     tasks_from: unattended-installs
     apply: { tags: always }
   tags: unattended-installs
-  # This task is opt-in. (Note we use `when` test, not `tags: never`,
-  # to support site.yml role tag inheritence.)
   when: "'unattended-installs' in ansible_run_tags"
 
 # ***
