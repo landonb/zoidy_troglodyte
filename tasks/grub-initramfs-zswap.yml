@@ -26,7 +26,8 @@
 #
 # - You can also enable these settings at runtime, e.g.,
 #
-#   echo lz4 > /sys/module/zswap/parameters/compressor
+#   sudo sh -c "echo lz4 > /sys/module/zswap/parameters/compressor"
+#   sudo sh -c "echo 1 > /sys/module/zswap/parameters/enabled"
 #
 # REFER: Grep dmesg to check for errors, e.g.,
 #
@@ -207,7 +208,7 @@
   ansible.builtin.apt:
     name: sysfsutils
 
-- name: Build /etc/sysfs.d/zswap.conf — enabled
+- name: Build /etc/sysfs.d/zswap.conf — enabled = Y
   become: true
   ansible.builtin.lineinfile:
     path: /etc/sysfs.d/zswap.conf
@@ -216,7 +217,7 @@
     state: present
     create: true
 
-- name: Build /etc/sysfs.d/zswap.conf — zpool
+- name: Build /etc/sysfs.d/zswap.conf — zpool = zsmalloc
   become: true
   ansible.builtin.lineinfile:
     path: /etc/sysfs.d/zswap.conf
@@ -224,7 +225,7 @@
     line: 'module/zswap/parameters/zpool = zsmalloc'
     state: present
 
-- name: Build /etc/sysfs.d/zswap.conf — compressor
+- name: Build /etc/sysfs.d/zswap.conf — compressor = lz4
   become: true
   ansible.builtin.lineinfile:
     path: /etc/sysfs.d/zswap.conf
@@ -232,7 +233,7 @@
     line: 'module/zswap/parameters/compressor = lz4'
     state: present
 
-- name: Build /etc/sysfs.d/zswap.conf — max_pool_percent
+- name: Build /etc/sysfs.d/zswap.conf — max_pool_percent = 20
   become: true
   ansible.builtin.lineinfile:
     path: /etc/sysfs.d/zswap.conf
@@ -240,7 +241,16 @@
     line: 'module/zswap/parameters/max_pool_percent = 20'
     state: present
 
-- name: Build /etc/sysfs.d/zswap.conf — same_filled_pages_enabled
+# IGNOR: We'll leave 2 other settings at their defaults:
+#   /sys/module/zswap/parameters/shrinker_enabled:N
+#   /sys/module/zswap/parameters/accept_threshold_percent:90
+
+# SAVVY: Author doesn't see this listed alongside the other settings,
+# e.g.,
+#   /sys/module/zswap/parameters/same_filled_pages_enabled
+# possibly because enabled by default (although some other
+# settings are also left at their defaults but show up).
+- name: Build /etc/sysfs.d/zswap.conf — same_filled_pages_enabled = Y
   become: true
   ansible.builtin.lineinfile:
     path: /etc/sysfs.d/zswap.conf
