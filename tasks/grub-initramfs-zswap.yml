@@ -197,6 +197,11 @@
 # - BEGET:
 #   https://www.reddit.com/r/debian/comments/1myqodp/using_zswap_on_a_system_with_an_encrypted_lvm/
 #   https://www.reddit.com/r/debian/comments/1n2g8fy/problems_with_zswap_on_debian_13/
+#
+# REFER: After running, verify the sysfs settings:
+#   cat /etc/sysfs.d/zswap.conf
+# - After booting, compare to runtime settings:
+#   grep -r . /sys/module/zswap/parameters/
 
 - name: Update APT package cache
   become: true
