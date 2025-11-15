@@ -57,4 +57,9 @@ zoidy_troglodyte_firewall_ports_tcp: []
 # USAGE: Set true to also install: binwalk, foremost, pgpdump.
 zoidy_troglodyte_include_dev_packages: false
 
+# USAGE: Enable this to add `swapon`, `swapoff`, and `e2label`
+# commands to sudoers (in addition to `tomb`). See task:
+#   update-sudoers-tomb
+zoidy_troglodyte_update_sudoers_add_all: false
+
 # ***

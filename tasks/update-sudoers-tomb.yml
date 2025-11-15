@@ -4,6 +4,49 @@
 # License: GPLv3
 ---
 
+# OPTIN: This task is now mostly opt-in, via var.:
+#   zoidy_troglodyte_update_sudoers_all
+# - When not set, this task only adds 'tomb' to sudoers.
+# - When set, this task also adds swapon, swapoff, and e2label.
+#
+# - BECUZ: Author uses bespoke script (that I lovingly call
+#   `321open`) to mount tomb (and other encfses), which requires
+#   privileges anyway; so it'll have privileges to run swapoff
+#   or swapoff as needed.
+#   - So we'll omit that potential attack vector, by the law of PoLP.
+#     - † Principle of Least Privilege, aka minimal priv. (PoMP),
+#         aka least authority (PoLA).
+#   - Though really the sudoers entry is restricted to your specific
+#     user, so not really a security issue, but we'll play it safe.
+#   - The issue is that tomb may leak image keys or sensitive data if
+#     swap is enabled. (So, conceivably, swap could be enabled after
+#     the tomb is mounted, then a rogue user could fill up physical
+#     RAM, and then sensitive data might end up in swap.)
+#     - Though the real risk is if the swap is plaintext when cold
+#       (when the machine is off), and not a concern if the swap
+#       partition or swap file is on an encrypted device (unless a
+#       rogue player has root access and can read swap, but at that
+#       point swap is probably not your main concern).
+#   - The tomb command, on the other hand, we will always enable in
+#     sudoers.
+#     - This lets you quickly unmount tombs without needing to
+#       escalate, just in case nefarious actors IRL are about to
+#       swoop in and try to grab your unlocked host while all your
+#       tombs and encfses are mounted — hopefully you can unmount
+#       in time, for which we can at least remove the sudo barrier
+#       (though if one of your shells is cd'ed into the tomb, tomb
+#        might refuse to unmount; YRMV).
+#
+#   - REFER: See related 321open project:
+#     https://github.com/DepoXy/321open#👐
+#     - Which is for macOS, and uses APFS volumes and/or
+#       DMG images for sensitive data (where DMG usage on
+#       macOS is similar to tomb usage on GNU/Linux).
+#     - Author has not (yet) published their GNU/Linux
+#       `321open` project for Linux (which includes a
+#       `23skidoo` command that closes tombs and unmounts
+#       encfs devices).
+
 - name: Add tomb to sudoers, to avoid double-prompting
   become: true
   ansible.builtin.lineinfile:
@@ -21,6 +64,7 @@
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapoff"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapoff"
     state: present
+  when: zoidy_troglodyte_update_sudoers_add_all
 
 # ***
 
@@ -31,6 +75,7 @@
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapon"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /usr/sbin/swapon"
     state: present
+  when: zoidy_troglodyte_update_sudoers_add_all
 
 # ***
 
@@ -41,5 +86,6 @@
     regexp: "^%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     line: "%{{ ansible_env.LOGNAME }} ALL=NOPASSWD: /sbin/e2label"
     state: present
+  when: zoidy_troglodyte_update_sudoers_add_all
 
 # ***

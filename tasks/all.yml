@@ -97,6 +97,10 @@
   tags: cli-gocryptfs
   when: "'cli-gocryptfs' in ansible_run_tags"
 
+# This task adds at least 'tomb' to /etc/sudoers.
+# - OPTIN: You can also choose to add the swapff,
+#   swapon, and e2label commands.
+#   - See notes atop the task file for thoughts.
 - name: Let any user elevate ‘tomb’
   ansible.builtin.include_role:
     name: zoidy_troglodyte
