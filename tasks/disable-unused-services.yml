@@ -24,7 +24,7 @@
   ansible.builtin.systemd:
     name: apache2
     state: stopped
-    enabled: no
+    enabled: false
   ignore_errors: true
 
 - name: Disable nginx service
@@ -32,7 +32,7 @@
   ansible.builtin.systemd:
     name: nginx
     state: stopped
-    enabled: no
+    enabled: false
   ignore_errors: true
 
 # ***
@@ -42,7 +42,7 @@
   ansible.builtin.systemd:
     name: vsftpd
     state: stopped
-    enabled: no
+    enabled: false
   ignore_errors: true
 
 # ***
@@ -52,7 +52,7 @@
   ansible.builtin.systemd:
     name: rpcbind
     state: stopped
-    enabled: no
+    enabled: false
   ignore_errors: true
 
 # ***
@@ -63,6 +63,5 @@
   ansible.builtin.systemd:
     name: postgresql
     state: stopped
-    enabled: no
+    enabled: false
   ignore_errors: true
-
