@@ -9,6 +9,7 @@
   ansible.builtin.file:
     path: /root/bin
     state: directory
+    mode: '2755'
 
 - name: Add Enemy IP intrusion detection email-alert script
   become: true
