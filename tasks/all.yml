@@ -83,6 +83,8 @@
 #     debug:
 #       msg: "ansible_run_tags: {{ ansible_run_tags }}"
 
+# ****
+
 # OPTIN/2025-11-11: We now recommend that you install
 # gocryptfs from APT, because the project is stable,
 # and so we don't have to maintain this GH installer.
@@ -108,7 +110,7 @@
     apply: { tags: always }
   tags: update-sudoers-tomb
 
-# ***
+# ****
 
 # OPTIN/2023-05-05: This task sets up an over-the-top email
 # alert if someone SSH's from an unlisted MAC address.
@@ -123,7 +125,7 @@
   tags: pam-sshd-overkill
   when: "'pam-sshd-overkill' in ansible_run_tags"
 
-# ***
+# ****
 
 # OPTIN: See atop task file for considerations enabling unattended-upgrades.
 - name: Configure Unattended Installs
