@@ -1,0 +1,74 @@
+# vim:tw=0:ts=2:sw=2:et:norl:ft=yaml.ansible
+# Author: Landon Bouma <https://tallybark.com/>
+# Project: https://github.com/landonb/zoidy_troglodyte#🧔
+# License: GPLv3
+---
+
+# USAGE: Prevent Suspend from Greeter.
+#
+# - UCASE: For any headless, long-running servers you might have.
+#
+# - BECUZ: The GNOME Shell Power Settings apply to the current user,
+#   but if you're not logged on, the power settings are derived from
+#   the GDM (GNOME Display Manager) user.
+#
+#   On Debian, by default, the host will sleep in 10 minutes if you
+#   are not logged on.
+#
+#   - E.g., if you boot the machine but don't logon, you can SSH to
+#     the host after booting, but the SSH connection will terminate
+#     10 minutes later when the host suspends itself.
+#
+#   - On some distros, the login screen interface is a separate
+#     process, e.g., LightDM GTK Greeter.
+#
+#   - On GNOME Shell, the greeter is just a gnome-shell process
+#     running as a limited user session as the GDM user (on
+#     Debian, it's the "Debian-gdm" user).
+#
+# - REFER: There are many methods to adjust the greeter sleep behavior.
+#
+#   - 1.) We'll do what `man 5 systemd-sleep.conf` suggests, and create
+#         a "drop-in" config under /etc/systemd/sleep.conf.d/.
+#
+#     - This is the least "disruptive" approach, as you're only
+#       adding a file, and you're not editing an existing file
+#       or twiddling any GSettings config.
+#
+#   - Alternatively, you could do any of the following (AFAIK;
+#     but the author has not tried any of these approaches):
+#
+#     - 2.) Edit general sleep config:
+#
+#         /etc/systemd/sleep.conf
+#
+#     - 3.) Edit Greeter config:
+#
+#         /etc/gdm3/greeter.dconf-defaults
+#
+#     - 4.) Twiddle GSettings config:
+#
+#         sudo -u Debian-gdm dbus-run-session \
+#           gsettings set org.gnome.settings-daemon.plugins.power \
+#             sleep-inactive-ac-type 'nothing'
+#
+#         sudo -u Debian-gdm dbus-run-session \
+#           gsettings set org.gnome.settings-daemon.plugins.power \
+#             sleep-inactive-ac-timeout 0
+#
+#       - Refer:
+#         https://www.reddit.com/r/debian/comments/1mtkqga/how_to_stop_debian_13_from_suspending/
+
+- name: Ensure /etc/systemd/sleep.conf.d exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/systemd/sleep.conf.d
+    state: directory
+    mode: '2755'
+
+- name: Add Sleepless Greeter config
+  become: true
+  ansible.builtin.template:
+    src: gdm-greeter-nosuspend.j2
+    dest: /etc/systemd/sleep.conf.d/gdm-greeter-nosuspend.conf
+    mode: '0775'

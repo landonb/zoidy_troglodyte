@@ -136,4 +136,14 @@
   tags: unattended-installs
   when: "'unattended-installs' in ansible_run_tags"
 
+# ****
+
+- name: Prevent Suspend from Login Screen
+  ansible.builtin.include_role:
+    name: zoidy_troglodyte
+    tasks_from: gdm-greeter-nosuspend
+    apply: { tags: always }
+  tags: gdm-greeter-nosuspend
+  when: "'gdm-greeter-nosuspend' in ansible_run_tags"
+
 # ***
