@@ -35,6 +35,16 @@
 
 # ***
 
+# ISOFF: See halfway down this file for what's really enabled.
+# - The first half of this file is disabled by default — it
+#   uses GRUB to enable Zswap but doesn't work for author.
+#   - These tasks are disabled unless enabled via group_vars:
+#       when: zoidy_troglodyte_zswap_grub
+# - It's the second half of this file that the author
+#   uses to enable Zswap (compressed RAM cache).
+#   - These task are enabled unless disabled via group_vars:
+#       when: zoidy_troglodyte_zswap_sysfsutils
+
 # SAVVY/2025-11-10: The first two steps (lz4 and lz4_compress) are
 # possibly not necessary, or at least most online I help I saw omit
 # them, and only show zsmalloc (possibly because the first two are
