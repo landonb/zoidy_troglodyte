@@ -20,7 +20,7 @@
 #
 #   swapon -s
 #
-# REFER: Grep Zwap parameters files to see current swap options:
+# REFER: Grep Zswap parameters files to see current swap options:
 #
 #   grep -r . /sys/module/zswap/parameters/
 #
