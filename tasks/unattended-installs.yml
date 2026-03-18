@@ -44,6 +44,15 @@
 #       if having a patched system that's never more than 1 day behind
 #       bugfixes is worth risking downtime should an upgrade bork something.
 
+# REFER/2026-03-17: Check if unattended-upgrades is installed, e.g.:
+#
+#     $ apt-cache policy unattended-upgrades
+#     unattended-upgrades:
+#       Installed: 2.12
+#     ...
+#
+#     $ sudo dpkg-reconfigure -plow unattended-upgrades
+
 # ***
 
 # mintupdate aka unattended-installs aka unattended-upgrades
