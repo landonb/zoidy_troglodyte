@@ -72,13 +72,13 @@
 # Preferences > Auto-upgrade [tab] > ✓ Apply updates automatically.
 - name: Install Auto-upgrades cron.daily job
   become: true
-  when: ansible_facts['distribution'] == 'Linux Mint'
+  # ISOFF/2024-03-21: See note above. This is alt to timer.
+  #  when: ansible_facts['distribution'] == 'Linux Mint'
+  when: false
   ansible.builtin.copy:
     src: mintupdate
     dest: /etc/cron.daily/mintupdate
     mode: '0775'
-  # ISOFF/2024-03-21: See note above. This is alt to timer.
-  when: false
 
 # ***
 
