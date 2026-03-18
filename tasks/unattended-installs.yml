@@ -108,7 +108,8 @@
 - name: Install unattended-upgrades and apt-listchanges packages
   become: true
   when: ansible_facts['distribution'] == 'Debian'
-  ansible.builtin.apt: name={{ item }}
+  ansible.builtin.apt:
+    name: "{{ item }}"
   loop:
     - unattended-upgrades
     - apt-listchanges
