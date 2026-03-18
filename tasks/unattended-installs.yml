@@ -117,6 +117,30 @@
     - unattended-upgrades
     - apt-listchanges
 
+# ***
+
+# HSTRY/2026-03-17: To avoid unintended-consequences (breaking things,
+# needing to logout because Neovide socket cannot be reclaimed, etc.),
+# run weekly, not daily.
+
+- name: "Configure unattended-upgrades to run apt-update weekly (not daily)"
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    regexp: "^APT::Periodic::Update-Package-Lists "
+    line: 'APT::Periodic::Update-Package-Lists "7";'
+    state: present
+
+- name: "Configure unattended-upgrades to run apt-upgrade weekly (not daily)"
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    regexp: "^APT::Periodic::Unattended-Upgrade "
+    line: 'APT::Periodic::Unattended-Upgrade "7";'
+    state: present
+
+# ***
+
 # INERT/2025-01-05: We'll leave 'unattended-upgrades' disabled for now.
 # - I'm not sure we should enable it.
 # - HSTRY: I've just it for years on Linux Mint, although I *rarely*
