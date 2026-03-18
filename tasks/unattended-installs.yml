@@ -97,13 +97,16 @@
 #   # Enable or Disable unattended-upgrades via Yes/No prompt:
 #   sudo dpkg-reconfigure unattended-upgrades
 #
-# SAVVY: Before unattended-upgrades runs, on Debian, you may see
-# a GNOME Software toast (notification) that indicates that
-# updates are available, and that they require a reboot.
-# - But then after upgrading, you won't necessarily have to
+# SAVVY: If unattended-upgrades is not installed, on Debian/GNOME
+# Shell, you may see a GNOME desktop notification (toast) when
+# updates are available, also that you must reboot to install them.
+# - But if you `apt upgrade` manually, you won't necessarily have to
 #   reboot (and /var/run/reboot-required won't exist).
-# - It basically seems like the OS doesn't know if you'll need
-#   to reboot or not, and hedges its bets, and tells you you will.
+# - By design, Debian also suggests that you reboot after upgrading
+#   software, because the system cannot be sure which services need
+#   to be restarted.
+#   - Refer: See `needrestart` which is a tool designed to suss when
+#     a reboot is required after manual apt-upgrade.
 
 - name: Install unattended-upgrades and apt-listchanges packages
   become: true
