@@ -16,9 +16,9 @@
 #
 #        https://wiki.archlinux.org/title/Zram
 #
-# REFER: Run `swapon -s` to see activate swap details:
+# REFER: Run `swapon --show` (née: `swapon -s`) to see activate swap details:
 #
-#   swapon -s
+#   swapon --show
 #
 # REFER: Grep Zswap parameters files to see current swap options:
 #
